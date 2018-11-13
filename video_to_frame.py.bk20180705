@@ -1,0 +1,44 @@
+#coding: utf-8
+'''
+Program Name: Video to Frame
+File Name: video_to_frame
+Creation Date: Apr 2018
+Programmer: XINWU LIU, BANGFAN LIU
+Abstract: This program is for convert videos to frames given a path
+Entry Condition: N/A
+Exit Condition: N/A
+Example: N/A
+Program Message: N/A
+Remarks: N/A
+Amendment Hisotry:
+			Version:
+			Date:
+			Programmer:
+			Reason:
+'''
+import os
+os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.utf8'
+import src.common as common
+
+if __name__ == '__main__':
+	cfg = common.get_config('config.ini')
+	main_logger = common.get_logger('video_to_frame','logconfig.ini', True)
+	# get paths
+	video_path=cfg.get('path', 'video_path')
+	common.path_check(video_path, main_logger, 'Video path NOT set!', 8)
+	frame_path=cfg.get('path', 'frame_path')
+	common.path_check(frame_path, main_logger, 'Fram path NOT set!', 9)
+
+	''' find all videos under a path and convert
+		them into frames
+	'''
+	import src.video_handler as video_handler
+	main_logger.info('Frame extraction start...')
+	for root,dirs,files in os.walk(video_path):
+		for item in files:
+			if common.video_fname_check(item, main_logger):
+				#print(root + os.path.sep + item)
+				item_dir_name = root.split(os.path.sep)[-2] + os.path.sep + root.split(os.path.sep)[-1] + os.path.sep + os.path.splitext(item)[0]
+				item_video = video_handler.VideoHandler(root + os.path.sep + item)
+				item_video.write_frame(frame_path + item_dir_name, skip_step=4)
+				

@@ -1,0 +1,53 @@
+2018-10-16 16:17:08,922:INFO:wrongHead:function init: execute begin
+2018-10-16 16:17:08,922:INFO:run_model:function init: json path json_output/ get successfully
+2018-10-16 16:17:08,922:INFO:wrongHead:function init: box config data read successfully
+2018-10-16 16:17:08,922:INFO:wrongHead:function init: checking box config data
+2018-10-16 16:17:08,922:INFO:run_model:function main: execute begin
+2018-10-16 16:17:08,922:INFO:run_model:function main: video_path video/ get successfully
+2018-10-16 16:17:08,923:INFO:run_model:function main: connecting to Mysql database
+2018-10-16 16:17:08,944:INFO:run_model:function main: Mysql database conneting successfully
+2018-10-16 16:17:08,944:INFO:run_model:function main: conneting to Oracle database
+2018-10-16 16:17:09,009:INFO:run_model:function main: Oracle database connect successfully
+2018-10-16 16:17:09,009:INFO:run_model:function main: prepare to execute model
+2018-10-16 16:17:09,009:INFO:run_model:function main: temp file <_io.TextIOWrapper name='tmp/pict.sav' mode='a+' encoding='UTF-8'> generate successfully
+2018-10-16 16:17:09,009:INFO:wrongHead:function main: walk through dirs under json path json_output/
+2018-10-16 16:17:09,018:INFO:run_model:function main: searching video infomation under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:09,018:INFO:wrongHead:function get_video_info: dir name ['HXD1C6167', '成都运达', '02', '一端司机室', '20180923', '101500', '884', '8'] get successfully
+2018-10-16 16:17:09,019:INFO:wrongHead:function get_video_info: video name HXD1C6167_成都运达_02_一端司机室_20180923_101500 get successfully
+2018-10-16 16:17:09,019:INFO:wrongHead:function get_video_info: fps 8 get successfully
+2018-10-16 16:17:09,019:INFO:wrongHead:function get_video_info: searching video infomation
+2018-10-16 16:17:09,020:INFO:run_model:function main: video info get successfully under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:09,021:INFO:run_model:function main: custom model execute begin under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:09,021:INFO:wrongHead:function exe_model: custom model execute begin under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:09,021:INFO:wrongHead:function exe_model: reading json files
+2018-10-16 16:17:09,394:INFO:wrongHead:function exe_model: json files read successfully
+2018-10-16 16:17:09,395:INFO:wrongHead:function exe_model: file name list generate successfully
+2018-10-16 16:17:09,500:INFO:wrongHead:function exe_model: posture list generate successfully
+2018-10-16 16:17:09,500:INFO:wrongHead:function exe_model: executing custom model
+2018-10-16 16:17:09,854:INFO:wrongHead:function exe_model: custom model execute finish under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:09,857:INFO:run_model:function main: checking custom model result under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:09,857:INFO:run_model:function main: custom model execute successfully under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:09,857:INFO:run_model:function main: matching lkj data and custom model result under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:09,857:INFO:wrongHead:function match_lkj: execute begin
+2018-10-16 16:17:09,857:INFO:wrongHead:function match_lkj: reading lkj data video//right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/6167-17017-5043728-5043438H0.0923.csv
+2018-10-16 16:17:09,866:INFO:wrongHead:function match_lkj: lkj data read successfully
+2018-10-16 16:17:09,867:INFO:wrongHead:function match_lkj: joining lkj data and wrong head result
+2018-10-16 16:17:10,169:INFO:wrongHead:function match_lkj: lkj data and wrong head result join successfully
+2018-10-16 16:17:10,169:INFO:wrongHead:function match_lkj: getting lkj signal info
+2018-10-16 16:17:10,171:INFO:wrongHead:function match_lkj: lkj signal info get successfully
+2018-10-16 16:17:10,171:INFO:wrongHead:function match_lkj: joining lkj data and point_forward_comb
+2018-10-16 16:17:10,380:INFO:wrongHead:function match_lkj: lkj data and point_forward_comb join successfully
+2018-10-16 16:17:10,380:INFO:wrongHead:function match_lkj: joining lkj data and fist result
+2018-10-16 16:17:10,525:INFO:wrongHead:function match_lkj: lkj data and fist result join successfully
+2018-10-16 16:17:10,525:INFO:run_model:function model_rt_check: checking lkj and custom model matching result
+2018-10-16 16:17:10,525:INFO:run_model:function store_result: no leave detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:10,525:INFO:run_model:function store_result: no wrongHead detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:10,525:INFO:run_model:function store_result: no double person detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:10,525:INFO:run_model:function store_result: no port shift violation detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:10,525:INFO:run_model:function store_result: no point_forward violate detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:10,525:INFO:run_model:function store_result: no fist violate detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:10,529:INFO:run_model:function main: updating video table HXD1C6167_成都运达_02_一端司机室_20180923_101500
+2018-10-16 16:17:10,567:INFO:run_model:function main: video table HXD1C6167_成都运达_02_一端司机室_20180923_101500 update successfully under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:10,568:INFO:run_model:function main: updating lkj table 235202 under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:10,571:INFO:run_model:function main: lkj table 235202 update successfully under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
+2018-10-16 16:17:10,572:INFO:run_model:function main: closing temp file <_io.TextIOWrapper name='tmp/pict.sav' mode='a+' encoding='UTF-8'>
