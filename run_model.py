@@ -19,8 +19,7 @@ Amendment Hisotry:
 '''
 import os
 os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.UTF8'
-import src.common as common
-import src.json_reader as json_reader
+import lib.common as common
 import numpy as np
 import pandas as pd
 from model.right.pos_recog_model import wrong_head as wrong_head_right
@@ -29,75 +28,28 @@ from model.right_back.pos_recog_model import wrong_head as wrong_head_right_back
 from model.right_back.pos_recog_model import arm_detect as arm_detect_right_back
 from model.right_back.pos_recog_model import get_angle
 import time
-import src.time_check as time_check
+import lib.lkj_lib as LKJLIB
+import lib.json_reader as json_reader
 import sys
-import traceback
 
 os_sep = os.path.sep
+openpose_logger = common.get_logger('openpose')
 
-get_lkj_signal = lambda lkj_data: lkj_data[pd.notnull(lkj_data['信号'])][['时间', '信号','事件','速度']].reset_index(drop=True)
 
-# def add_to_db(db, qry_result, result_list, violate):
-#     ''' for each result from result_list, insert it to database
-#         input:
-#                 db: database
-#                 root_arr: path list split by '/'
-#                 result_list: the result list returned by model
-#                 driver: driver info
-#                 violate: violate tag
-#         return:
-#                 a boolean flag to determine the success of db insertion
-#     '''
-#     global mysql_logger,save_tmp
-#     mysql_logger.info('function add_to_db: execute begin')
-
-#     # dirname = root_arr[-1].split('_')
-#     # train_type, train_num, duan = dirname[0], dirname[1], dirname[2]
-#     lkj_fname, video_st_tm, video_ed_tm, video_name, traintype, trainum, port, shift_num, driver,_,video_path = qry_result
-#     for result in result_list:
-#         ptc_fname = result[2]
-#         violate_st_tm = result[0]
-#         violate_ed_tm = result[4]
-#         frame_st = result[1]
-#         frame_ed = result[5]
-#         #violate = result[3]
-#         #print(result)
-#         #print(qry_result)
-#         #sql="insert into {0} ({1}) values (\'{2}\',\'{3}\',\'{4}\',\'{5}\',\'{6}\',\'{7}\',\'{8}\',\'{9}\',\'{10}\',\'{11}\')".format('edward_database.action_result', 'filename,traintype,trainum,start_time,end_time,start_frame,end_frame,driver,action,port', result[2], train_type, train_num, result[0], result[3], result[1], result[4], driver, violate, duan)
-#         sql = "insert into violate_result.report values (\'{0}\', \'{1}\', \'{2}\', \'{3}\', \'{4}\', \'{5}\', \'{6}\', {7}, \'{8}\', \'{9}\', \'{10}\', \'{11}\', \'{12}\', \'{13}\', now(), \'{14}\')".\
-#                 format(lkj_fname, video_name, video_st_tm, video_ed_tm, traintype, trainum, port, shift_num, driver, violate, violate_st_tm, violate_ed_tm, frame_st, frame_ed, video_path)
-#         mysql_logger.info('function add_to_db: executing insert sql: {0}'.format(sql))
-#         try:
-#             db.Insert(sql)
-#             mysql_logger.info('function add_to_db: insert sql execute successfully')
-#             save_tmp.write(video_name + ',' + frame_st + ',' + frame_ed+'\n')
-#         except Exception as e:
-#             mysql_logger.error('function add_to_db: insert sql execute failed: {0}'.format(traceback.format_exc()))
-#             return False
-#     return True
-
-def init(log_name):
+def init():
     ''' initialization process including config parameters and logger fetch
         input: model log name
         return: config and loggers objects, json path and box info
     '''
     print('run_model initializing')
-    cfg = common.get_config('config.ini')
-    main_logger = common.get_logger('run_model', 'logconfig.ini', True)
-    model_logger = common.get_logger(log_name, 'logconfig.ini', False)
-    mysql_logger = common.get_logger('mysql', 'logconfig.ini', False)
-    oracle_logger = common.get_logger('oracle', 'logconfig.ini', False)
-    model_logger.info('function init: execute begin')
-    json_path = cfg.get('path', 'json_out_path')
-    common.path_check(json_path, main_logger, 'Json path NOT set!', 40)
-    main_logger.info('function init: json path {0} get successfully'.format(json_path))
-    common.file_check('config/reference_box.ini', main_logger, 'Reference_box NOT set!', 41)
+
+    common.file_check('config/reference_box.ini', openpose_logger, 'Reference_box NOT set!', 41)
     try:
         box_info = json_reader.get_reference_data('config/reference_box.ini')
-
-        model_logger.info('function init: box config data read successfully')
-    except Exception as e:
-        model_logger.error('function init: box config data read failed {0}'.format(traceback.format_exc()))
+        openpose_logger.info('function init: box config data read successfully')
+    except Exception:
+        openpose_logger.error('function init: box config data read failed {0}'.format(traceback.format_exc()))
+    
     model_logger.info('function init: checking box config data')
     if box_info == None: common.raise_error('Error: box_info is None', 42)
     return cfg, main_logger, model_logger, mysql_logger, oracle_logger, json_path, box_info
@@ -206,31 +158,6 @@ def exe_model(root_arr, box_info, model_result, st_time):
         model_logger.info('function exe_model: custom model execute finish under path {0}'.format(exe_path))
         return exe_flg
 
-# def connect_db():
-#     global cfg, mysql_logger, model_logger, mysql
-#     username = cfg.get('mysql', 'user')
-#     password = cfg.get('mysql', 'password')
-#     host = cfg.get('mysql', 'host')
-#     port = cfg.get('mysql', 'port')
-#     db_flag = True
-#     try:
-#         mysql = pyMysql.Mysql(username, password, host, port)
-#     except:
-#         mysql_logger.error('Database connecting Failed!')
-#         model_logger.error('Database connecting Failed!')
-#         db_flag = False
-#     return db_flag
-
-# def get_lkj(camera, dirname):
-#     global video_pth
-#     lkj_file = video_pth + os_sep + camera + os_sep + dirname + os_sep + dirname + '.csv'
-#     lkj_data = pd.read_csv(lkj_file, encoding='gbk')
-#     date_str = dirname.split('_')[-1]
-#     date_str_fmt = date_str[:4]+'-'+date_str[4:6]+'-'+date_str[6:]
-#     lkj_data_not_nan = lkj_data[pd.notnull(lkj_data['速度'])][['时间', '速度']].reset_index(drop=True)
-#     lkj_data_not_nan['时间'] = [date_str_fmt+' '+ x for x in lkj_data_not_nan['时间']]
-#     return lkj_data_not_nan
-
 
 def update_video_table(video_name, oracle_db):
     global oracle_logger
@@ -283,26 +210,6 @@ def update_lkj_table(oracle_db, mysql_db, lkj_id):
 
     return True
 
-# def leave_filt(leave_result, lkj_data, video_name):
-#     '''
-#         this function is used for excluding non-operate
-#         channel by events in lkj data
-#         input: 
-#                 leave_result: openpose returned leave result list
-#                 lkj_data: lkj dataframe
-#                 video_name: video name
-#         output:
-#                 rt_list: leave result after filtering
-#     '''
-#     rt_list = []
-#     for i in leave_result:
-#         leave_ed_tm = i[4]
-#         port_info=lkj_data[(lkj_data['事件']== '鸣笛开始') | (lkj_data['事件']== '鸣笛结束')][['时间', '其他']].drop_duplicates()
-#         channel = time_check.port_filter(port_info, leave_ed_tm, 5)
-#         if channel != False:
-#             if channel in video_name:
-#                 rt_list.append(i)
-#     return rt_list
 
 #def match_lkj(qry_result,leave_result,wrong_head_result, num_people_result):
 def match_lkj(qry_result, model_result, root_arr):
@@ -414,8 +321,6 @@ def match_lkj(qry_result, model_result, root_arr):
                         #print(point_forward_include_final)
                         #print(lkj_signal.values.tolist())
                     if other_gesture_result != []:
-#                        print(other_gesture_result)
-#                        print(point_forward_result)
                         #other_gesture_result = time_check.model_time_exclude(other_gesture_result,point_forward_result,2)
                         #print(lkj_signal)
                         if point_forward_include_final != [] and point_forward_include_final != [[]]:

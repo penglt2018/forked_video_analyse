@@ -12,9 +12,10 @@ os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.UTF8'  #或者os.environ['NLS
 import lib.common as common
 import lib.lkj_lib as LKJLIB
 import lib.ftp_client as ftp_client
-from requests import get  # to make GET request
+from requests import get    # to make GET request
 import traceback
 os_sep = os.path.sep
+video_path='./video'        # set download path
 
 def init(log_name):
     ''' Function for initializing main logger and
@@ -292,7 +293,6 @@ def download_file(video_list):
     main_logger.info('Download program execute begin')
     main_logger.info('Checking video path')
     
-    video_path='./video'   # set download path
     if not os.path.isdir(video_path):
         main_logger.warning('Video path does not exist, creating path {0}'.format(video_path))
         os.makedirs(video_path)
