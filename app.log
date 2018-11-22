@@ -1,53 +1,115 @@
-2018-10-16 16:17:08,922:INFO:wrongHead:function init: execute begin
-2018-10-16 16:17:08,922:INFO:run_model:function init: json path json_output/ get successfully
-2018-10-16 16:17:08,922:INFO:wrongHead:function init: box config data read successfully
-2018-10-16 16:17:08,922:INFO:wrongHead:function init: checking box config data
-2018-10-16 16:17:08,922:INFO:run_model:function main: execute begin
-2018-10-16 16:17:08,922:INFO:run_model:function main: video_path video/ get successfully
-2018-10-16 16:17:08,923:INFO:run_model:function main: connecting to Mysql database
-2018-10-16 16:17:08,944:INFO:run_model:function main: Mysql database conneting successfully
-2018-10-16 16:17:08,944:INFO:run_model:function main: conneting to Oracle database
-2018-10-16 16:17:09,009:INFO:run_model:function main: Oracle database connect successfully
-2018-10-16 16:17:09,009:INFO:run_model:function main: prepare to execute model
-2018-10-16 16:17:09,009:INFO:run_model:function main: temp file <_io.TextIOWrapper name='tmp/pict.sav' mode='a+' encoding='UTF-8'> generate successfully
-2018-10-16 16:17:09,009:INFO:wrongHead:function main: walk through dirs under json path json_output/
-2018-10-16 16:17:09,018:INFO:run_model:function main: searching video infomation under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:09,018:INFO:wrongHead:function get_video_info: dir name ['HXD1C6167', '成都运达', '02', '一端司机室', '20180923', '101500', '884', '8'] get successfully
-2018-10-16 16:17:09,019:INFO:wrongHead:function get_video_info: video name HXD1C6167_成都运达_02_一端司机室_20180923_101500 get successfully
-2018-10-16 16:17:09,019:INFO:wrongHead:function get_video_info: fps 8 get successfully
-2018-10-16 16:17:09,019:INFO:wrongHead:function get_video_info: searching video infomation
-2018-10-16 16:17:09,020:INFO:run_model:function main: video info get successfully under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:09,021:INFO:run_model:function main: custom model execute begin under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:09,021:INFO:wrongHead:function exe_model: custom model execute begin under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:09,021:INFO:wrongHead:function exe_model: reading json files
-2018-10-16 16:17:09,394:INFO:wrongHead:function exe_model: json files read successfully
-2018-10-16 16:17:09,395:INFO:wrongHead:function exe_model: file name list generate successfully
-2018-10-16 16:17:09,500:INFO:wrongHead:function exe_model: posture list generate successfully
-2018-10-16 16:17:09,500:INFO:wrongHead:function exe_model: executing custom model
-2018-10-16 16:17:09,854:INFO:wrongHead:function exe_model: custom model execute finish under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:09,857:INFO:run_model:function main: checking custom model result under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:09,857:INFO:run_model:function main: custom model execute successfully under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:09,857:INFO:run_model:function main: matching lkj data and custom model result under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:09,857:INFO:wrongHead:function match_lkj: execute begin
-2018-10-16 16:17:09,857:INFO:wrongHead:function match_lkj: reading lkj data video//right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/6167-17017-5043728-5043438H0.0923.csv
-2018-10-16 16:17:09,866:INFO:wrongHead:function match_lkj: lkj data read successfully
-2018-10-16 16:17:09,867:INFO:wrongHead:function match_lkj: joining lkj data and wrong head result
-2018-10-16 16:17:10,169:INFO:wrongHead:function match_lkj: lkj data and wrong head result join successfully
-2018-10-16 16:17:10,169:INFO:wrongHead:function match_lkj: getting lkj signal info
-2018-10-16 16:17:10,171:INFO:wrongHead:function match_lkj: lkj signal info get successfully
-2018-10-16 16:17:10,171:INFO:wrongHead:function match_lkj: joining lkj data and point_forward_comb
-2018-10-16 16:17:10,380:INFO:wrongHead:function match_lkj: lkj data and point_forward_comb join successfully
-2018-10-16 16:17:10,380:INFO:wrongHead:function match_lkj: joining lkj data and fist result
-2018-10-16 16:17:10,525:INFO:wrongHead:function match_lkj: lkj data and fist result join successfully
-2018-10-16 16:17:10,525:INFO:run_model:function model_rt_check: checking lkj and custom model matching result
-2018-10-16 16:17:10,525:INFO:run_model:function store_result: no leave detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:10,525:INFO:run_model:function store_result: no wrongHead detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:10,525:INFO:run_model:function store_result: no double person detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:10,525:INFO:run_model:function store_result: no port shift violation detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:10,525:INFO:run_model:function store_result: no point_forward violate detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:10,525:INFO:run_model:function store_result: no fist violate detected under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:10,529:INFO:run_model:function main: updating video table HXD1C6167_成都运达_02_一端司机室_20180923_101500
-2018-10-16 16:17:10,567:INFO:run_model:function main: video table HXD1C6167_成都运达_02_一端司机室_20180923_101500 update successfully under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:10,568:INFO:run_model:function main: updating lkj table 235202 under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:10,571:INFO:run_model:function main: lkj table 235202 update successfully under path json_output/right_back/HXD1C_6167_2_17017_20180923062433_20180923103221/HXD1C6167_成都运达_02_一端司机室_20180923_101500_884_8
-2018-10-16 16:17:10,572:INFO:run_model:function main: closing temp file <_io.TextIOWrapper name='tmp/pict.sav' mode='a+' encoding='UTF-8'>
+2018-11-22 09:23:41,935:INFO:run_model:Connecting to Mysql database
+2018-11-22 09:23:41,950:INFO:run_model:mysql database connect successfully
+2018-11-22 09:23:41,950:INFO:run_model:Initializting process successfully
+2018-11-22 09:23:41,950:INFO:run_model:Walking through path under video path ./video
+2018-11-22 09:23:41,950:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4 related information
+2018-11-22 09:23:41,951:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_200000 information retrieve successfully
+2018-11-22 09:23:41,951:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4
+2018-11-22 09:23:41,960:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4
+2018-11-22 09:24:12,210:INFO:run_model:Frames extraction from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4 successfully
+2018-11-22 09:25:12,793:INFO:run_model:YOLO execute successfully to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:25:12,793:INFO:run_model:Executing LKJ and yolo result correlation
+2018-11-22 09:25:13,825:INFO:run_model:LKJ and yolo result correlation successfully
+2018-11-22 09:25:13,825:ERROR:run_model:Violation result of video HXD1C0066_成都运达_02_一端司机室_20181010_200000 stored contains some errors, please refer to yolo log for further details
+2018-11-22 09:25:13,827:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_171500.mp4 related information
+2018-11-22 09:25:13,828:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_171500 information retrieve successfully
+2018-11-22 09:25:13,828:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_171500.mp4
+2018-11-22 09:25:13,837:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_171500.mp4
+2018-11-22 09:25:44,945:INFO:run_model:Frames extraction from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_171500.mp4 successfully
+2018-11-22 09:26:22,343:INFO:run_model:Connecting to Mysql database
+2018-11-22 09:26:22,354:INFO:run_model:mysql database connect successfully
+2018-11-22 09:26:22,354:INFO:run_model:Initializting process successfully
+2018-11-22 09:26:22,355:INFO:run_model:Walking through path under video path ./video
+2018-11-22 09:26:22,355:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4 related information
+2018-11-22 09:26:22,359:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_200000 information retrieve successfully
+2018-11-22 09:26:22,360:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4
+2018-11-22 09:26:22,375:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4
+2018-11-22 09:26:53,230:INFO:run_model:Frames extraction from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4 successfully
+2018-11-22 09:27:51,168:INFO:run_model:YOLO execute successfully to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:27:51,168:INFO:run_model:Executing LKJ and yolo result correlation
+2018-11-22 09:27:52,224:INFO:run_model:LKJ and yolo result correlation successfully
+2018-11-22 09:27:52,889:INFO:run_model:Violation result of video HXD1C0066_成都运达_02_一端司机室_20181010_200000 stored successfully
+2018-11-22 09:27:52,890:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_171500.mp4 related information
+2018-11-22 09:27:52,891:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_171500 information retrieve successfully
+2018-11-22 09:27:52,891:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_171500.mp4
+2018-11-22 09:27:52,899:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_171500.mp4
+2018-11-22 09:28:23,924:INFO:run_model:Frames extraction from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_171500.mp4 successfully
+2018-11-22 09:29:22,945:INFO:run_model:YOLO execute successfully to video HXD1C0066_成都运达_02_一端司机室_20181010_171500
+2018-11-22 09:29:22,946:INFO:run_model:Executing LKJ and yolo result correlation
+2018-11-22 09:29:24,007:INFO:run_model:LKJ and yolo result correlation successfully
+2018-11-22 09:29:24,621:INFO:run_model:Violation result of video HXD1C0066_成都运达_02_一端司机室_20181010_171500 stored successfully
+2018-11-22 09:29:24,622:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_193000.mp4 related information
+2018-11-22 09:29:24,623:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_193000 information retrieve successfully
+2018-11-22 09:29:24,623:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_193000.mp4
+2018-11-22 09:29:24,631:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_193000.mp4
+2018-11-22 09:29:54,969:INFO:run_model:Frames extraction from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_193000.mp4 successfully
+2018-11-22 09:30:53,304:INFO:run_model:YOLO execute successfully to video HXD1C0066_成都运达_02_一端司机室_20181010_193000
+2018-11-22 09:30:53,305:INFO:run_model:Executing LKJ and yolo result correlation
+2018-11-22 09:30:54,208:INFO:run_model:LKJ and yolo result correlation successfully
+2018-11-22 09:30:54,208:INFO:run_model:Violation result of video HXD1C0066_成都运达_02_一端司机室_20181010_193000 stored successfully
+2018-11-22 09:30:54,209:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_184500.mp4 related information
+2018-11-22 09:30:54,211:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_184500 information retrieve successfully
+2018-11-22 09:30:54,211:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_184500.mp4
+2018-11-22 09:30:54,218:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_184500.mp4
+2018-11-22 09:31:25,699:INFO:run_model:Frames extraction from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_184500.mp4 successfully
+2018-11-22 09:32:24,256:INFO:run_model:YOLO execute successfully to video HXD1C0066_成都运达_02_一端司机室_20181010_184500
+2018-11-22 09:32:24,256:INFO:run_model:Executing LKJ and yolo result correlation
+2018-11-22 09:32:25,537:INFO:run_model:LKJ and yolo result correlation successfully
+2018-11-22 09:32:30,983:INFO:run_model:Violation result of video HXD1C0066_成都运达_02_一端司机室_20181010_184500 stored successfully
+2018-11-22 09:32:30,985:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_191500.mp4 related information
+2018-11-22 09:32:30,986:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_191500 information retrieve successfully
+2018-11-22 09:32:30,986:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_191500.mp4
+2018-11-22 09:32:30,993:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_191500.mp4
+2018-11-22 09:33:02,817:INFO:run_model:Frames extraction from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_191500.mp4 successfully
+2018-11-22 09:34:00,722:INFO:run_model:YOLO execute successfully to video HXD1C0066_成都运达_02_一端司机室_20181010_191500
+2018-11-22 09:34:00,722:INFO:run_model:Executing LKJ and yolo result correlation
+2018-11-22 09:34:01,944:INFO:run_model:LKJ and yolo result correlation successfully
+2018-11-22 09:34:03,625:INFO:run_model:Violation result of video HXD1C0066_成都运达_02_一端司机室_20181010_191500 stored successfully
+2018-11-22 09:34:03,627:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_194500.mp4 related information
+2018-11-22 09:34:03,628:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_194500 information retrieve successfully
+2018-11-22 09:34:03,628:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_194500.mp4
+2018-11-22 09:34:03,635:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_194500.mp4
+2018-11-22 09:34:33,837:INFO:run_model:Frames extraction from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_194500.mp4 successfully
+2018-11-22 09:35:31,372:INFO:run_model:YOLO execute successfully to video HXD1C0066_成都运达_02_一端司机室_20181010_194500
+2018-11-22 09:35:31,373:INFO:run_model:Executing LKJ and yolo result correlation
+2018-11-22 09:35:32,258:INFO:run_model:LKJ and yolo result correlation successfully
+2018-11-22 09:35:32,325:INFO:run_model:Violation result of video HXD1C0066_成都运达_02_一端司机室_20181010_194500 stored successfully
+2018-11-22 09:35:32,326:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_190000.mp4 related information
+2018-11-22 09:35:32,328:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_190000 information retrieve successfully
+2018-11-22 09:35:32,328:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_190000.mp4
+2018-11-22 09:35:32,335:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_190000.mp4
+2018-11-22 09:36:03,326:INFO:run_model:Frames extraction from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_190000.mp4 successfully
+2018-11-22 09:37:01,297:INFO:run_model:YOLO execute successfully to video HXD1C0066_成都运达_02_一端司机室_20181010_190000
+2018-11-22 09:37:01,297:INFO:run_model:Executing LKJ and yolo result correlation
+2018-11-22 09:37:02,460:INFO:run_model:LKJ and yolo result correlation successfully
+2018-11-22 09:37:03,352:INFO:run_model:Violation result of video HXD1C0066_成都运达_02_一端司机室_20181010_190000 stored successfully
+2018-11-22 09:37:03,353:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_173000.mp4 related information
+2018-11-22 09:37:03,354:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_173000 information retrieve successfully
+2018-11-22 09:37:03,354:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_173000.mp4
+2018-11-22 09:37:03,362:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_173000.mp4
+2018-11-22 09:37:35,574:INFO:run_model:Frames extraction from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_173000.mp4 successfully
+2018-11-22 09:38:33,594:INFO:run_model:YOLO execute successfully to video HXD1C0066_成都运达_02_一端司机室_20181010_173000
+2018-11-22 09:38:33,594:INFO:run_model:Executing LKJ and yolo result correlation
+2018-11-22 09:38:34,483:INFO:run_model:LKJ and yolo result correlation successfully
+2018-11-22 09:38:34,583:INFO:run_model:Violation result of video HXD1C0066_成都运达_02_一端司机室_20181010_173000 stored successfully
+2018-11-22 09:38:34,584:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_181500.mp4 related information
+2018-11-22 09:38:34,585:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_181500 information retrieve successfully
+2018-11-22 09:38:34,585:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_181500.mp4
+2018-11-22 09:38:34,592:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_181500.mp4
+2018-11-22 09:43:59,294:INFO:run_model:Connecting to Mysql database
+2018-11-22 09:43:59,307:INFO:run_model:mysql database connect successfully
+2018-11-22 09:43:59,307:INFO:run_model:Initializting process successfully
+2018-11-22 09:43:59,307:INFO:run_model:Walking through path under video path ./video
+2018-11-22 09:43:59,308:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4 related information
+2018-11-22 09:43:59,309:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_200000 information retrieve successfully
+2018-11-22 09:43:59,309:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4
+2018-11-22 09:43:59,316:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4
+2018-11-22 09:44:31,260:INFO:run_model:Frames extraction from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_200000.mp4 successfully
+2018-11-22 09:45:34,423:INFO:run_model:YOLO execute successfully to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:45:34,423:INFO:run_model:Executing LKJ and yolo result correlation
+2018-11-22 09:45:35,573:INFO:run_model:LKJ and yolo result correlation successfully
+2018-11-22 09:45:36,225:INFO:run_model:Violation result of video HXD1C0066_成都运达_02_一端司机室_20181010_200000 stored successfully
+2018-11-22 09:45:36,226:INFO:run_model:Retrieving video HXD1C0066_成都运达_02_一端司机室_20181010_171500.mp4 related information
+2018-11-22 09:45:36,228:INFO:run_model:video HXD1C0066_成都运达_02_一端司机室_20181010_171500 information retrieve successfully
+2018-11-22 09:45:36,228:INFO:run_model:Generating object for video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_171500.mp4
+2018-11-22 09:45:36,236:INFO:run_model:Extracting frames from video ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/HXD1C0066_成都运达_02_一端司机室_20181010_171500.mp4

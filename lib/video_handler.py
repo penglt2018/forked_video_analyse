@@ -44,11 +44,11 @@ class VideoHandler(object):
     @property
     def get_video_time_length(self):
         return int(round(self._frameNum / self._fps))
-    @property
-    def set_video_frames(skip_step=4, time_list=[], forward_time=30, bilateralFlg=False):
+
+    def set_video_frames(self, skip_step=4, time_list=[], forward_time=30, bilateralFlg=False):
         self._frames = self.frame_extract(skip_step, time_list, forward_time, bilateralFlg)
-    @property
-    def get_video_frames():
+    
+    def get_video_frames(self):
         return self._frames
 
     def get_frame_index(self,time_list=[]):
@@ -95,10 +95,10 @@ class VideoHandler(object):
             raise SystemError('{0} fps error !'.format(self._videoPath))
         return frame_data
 
-    def write_frames(self, path, frame_st_idx, frame_ed_idx):
+    def write_frames(self, path, video_name, frame_st_idx, frame_ed_idx):
         for pix_mat, frame_idx in self._frames:
             if frame_idx >= frame_st_idx and frame_idx <= frame_ed_idx:
-                write_filename = path + '_' + '0' * (5 - len(str(frame_idx))) + str(frame_idx) + '.png'
+                write_filename = path + os.path.sep + video_name + '_' + '0' * (5 - len(str(frame_idx))) + str(frame_idx) + '.png'
                 cv2.imencode('.png', pix_mat, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])[1].tofile(write_filename)
 
 

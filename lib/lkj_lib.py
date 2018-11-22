@@ -186,7 +186,7 @@ def model_time_exclude(data1,data2,time_range):
             filt_time.append(item)
     return df1[df1['timestamp'].isin(filt_time)].iloc[:,1:]#[col_data]
     
-def lkj_time_filter(data_in,data_lkj,speed_thresh=1,time_jump=120,row_add=5, time_range=3):
+def time_filter(data_in,data_lkj,speed_thresh=1,time_jump=120,row_add=5, time_range=3):
     # print(data_lkj)
     """
     :param data_in:输入数据，为多维列表

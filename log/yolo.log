@@ -1,0 +1,202 @@
+2018-11-22 09:23:39,353:INFO:yolo:Initializing
+2018-11-22 09:23:39,353:INFO:yolo:Yolo parameters get successfully
+2018-11-22 09:23:39,405:INFO:yolo:Darknet import successfully
+2018-11-22 09:23:39,405:INFO:yolo:Darknet meta load successfully
+2018-11-22 09:23:41,935:INFO:yolo:Darknet network load successfully
+2018-11-22 09:23:41,935:INFO:yolo:GPU set to 0
+2018-11-22 09:24:12,211:INFO:yolo:Preparing for running yolo
+2018-11-22 09:24:12,211:INFO:yolo:Video start time get successfully
+2018-11-22 09:24:12,211:INFO:yolo:Video name get successfully
+2018-11-22 09:24:12,211:INFO:yolo:Running yolo detect function to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:25:12,793:INFO:yolo:Yolo detect function execute successfully
+2018-11-22 09:25:12,793:INFO:yolo:Reading lkj data ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/42005001.1010.csv
+2018-11-22 09:25:12,814:INFO:yolo:LKJ file read successfully
+2018-11-22 09:25:12,814:INFO:yolo:Seperating YOLO predict result
+2018-11-22 09:25:12,815:INFO:yolo:No_break list build successfully
+2018-11-22 09:25:12,817:INFO:yolo:Sleep list build successfully
+2018-11-22 09:25:12,817:INFO:yolo:Cellphone list build successfully
+2018-11-22 09:25:12,818:INFO:yolo:Stand_2 list build successfully
+2018-11-22 09:25:13,480:INFO:yolo:LKJ data and no_break result join successfully
+2018-11-22 09:25:13,824:INFO:yolo:LKJ data and stand_2 result join successfully
+2018-11-22 09:25:13,825:ERROR:yolo:no_break result insert to db failed to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:25:13,825:INFO:yolo:Sleep NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:25:13,825:INFO:yolo:Cellphone NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:25:13,825:INFO:yolo:Stand_2 violation NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:25:44,946:INFO:yolo:Preparing for running yolo
+2018-11-22 09:25:44,946:INFO:yolo:Video start time get successfully
+2018-11-22 09:25:44,946:INFO:yolo:Video name get successfully
+2018-11-22 09:25:44,946:INFO:yolo:Running yolo detect function to video HXD1C0066_成都运达_02_一端司机室_20181010_171500
+2018-11-22 09:26:19,878:INFO:yolo:Initializing
+2018-11-22 09:26:19,878:INFO:yolo:Yolo parameters get successfully
+2018-11-22 09:26:19,932:INFO:yolo:Darknet import successfully
+2018-11-22 09:26:19,932:INFO:yolo:Darknet meta load successfully
+2018-11-22 09:26:22,343:INFO:yolo:Darknet network load successfully
+2018-11-22 09:26:22,343:INFO:yolo:GPU set to 0
+2018-11-22 09:26:53,230:INFO:yolo:Preparing for running yolo
+2018-11-22 09:26:53,230:INFO:yolo:Video start time get successfully
+2018-11-22 09:26:53,231:INFO:yolo:Video name get successfully
+2018-11-22 09:26:53,231:INFO:yolo:Running yolo detect function to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:27:51,167:INFO:yolo:Yolo detect function execute successfully
+2018-11-22 09:27:51,168:INFO:yolo:Reading lkj data ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/42005001.1010.csv
+2018-11-22 09:27:51,189:INFO:yolo:LKJ file read successfully
+2018-11-22 09:27:51,189:INFO:yolo:Seperating YOLO predict result
+2018-11-22 09:27:51,190:INFO:yolo:No_break list build successfully
+2018-11-22 09:27:51,192:INFO:yolo:Sleep list build successfully
+2018-11-22 09:27:51,192:INFO:yolo:Cellphone list build successfully
+2018-11-22 09:27:51,193:INFO:yolo:Stand_2 list build successfully
+2018-11-22 09:27:51,871:INFO:yolo:LKJ data and no_break result join successfully
+2018-11-22 09:27:52,224:INFO:yolo:LKJ data and stand_2 result join successfully
+2018-11-22 09:27:52,888:INFO:yolo:no_break result insert to db successfully
+2018-11-22 09:27:52,888:INFO:yolo:Sleep NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:27:52,889:INFO:yolo:Cellphone NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:27:52,889:INFO:yolo:Stand_2 violation NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:28:23,925:INFO:yolo:Preparing for running yolo
+2018-11-22 09:28:23,925:INFO:yolo:Video start time get successfully
+2018-11-22 09:28:23,925:INFO:yolo:Video name get successfully
+2018-11-22 09:28:23,925:INFO:yolo:Running yolo detect function to video HXD1C0066_成都运达_02_一端司机室_20181010_171500
+2018-11-22 09:29:22,945:INFO:yolo:Yolo detect function execute successfully
+2018-11-22 09:29:22,946:INFO:yolo:Reading lkj data ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/42005001.1010.csv
+2018-11-22 09:29:22,966:INFO:yolo:LKJ file read successfully
+2018-11-22 09:29:22,966:INFO:yolo:Seperating YOLO predict result
+2018-11-22 09:29:22,967:INFO:yolo:No_break list build successfully
+2018-11-22 09:29:22,968:INFO:yolo:Sleep list build successfully
+2018-11-22 09:29:22,968:INFO:yolo:Cellphone list build successfully
+2018-11-22 09:29:22,969:INFO:yolo:Stand_2 list build successfully
+2018-11-22 09:29:23,707:INFO:yolo:LKJ data and no_break result join successfully
+2018-11-22 09:29:24,007:INFO:yolo:LKJ data and stand_2 result join successfully
+2018-11-22 09:29:24,621:INFO:yolo:no_break result insert to db successfully
+2018-11-22 09:29:24,621:INFO:yolo:Sleep NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_171500
+2018-11-22 09:29:24,621:INFO:yolo:Cellphone NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_171500
+2018-11-22 09:29:24,621:INFO:yolo:Stand_2 violation NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_171500
+2018-11-22 09:29:54,969:INFO:yolo:Preparing for running yolo
+2018-11-22 09:29:54,969:INFO:yolo:Video start time get successfully
+2018-11-22 09:29:54,970:INFO:yolo:Video name get successfully
+2018-11-22 09:29:54,970:INFO:yolo:Running yolo detect function to video HXD1C0066_成都运达_02_一端司机室_20181010_193000
+2018-11-22 09:30:53,304:INFO:yolo:Yolo detect function execute successfully
+2018-11-22 09:30:53,305:INFO:yolo:Reading lkj data ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/42005001.1010.csv
+2018-11-22 09:30:53,321:INFO:yolo:LKJ file read successfully
+2018-11-22 09:30:53,321:INFO:yolo:Seperating YOLO predict result
+2018-11-22 09:30:53,322:INFO:yolo:No_break list build successfully
+2018-11-22 09:30:53,324:INFO:yolo:Sleep list build successfully
+2018-11-22 09:30:53,325:INFO:yolo:Cellphone list build successfully
+2018-11-22 09:30:53,325:INFO:yolo:Stand_2 list build successfully
+2018-11-22 09:30:54,010:INFO:yolo:LKJ data and no_break result join successfully
+2018-11-22 09:30:54,208:INFO:yolo:LKJ data and stand_2 result join successfully
+2018-11-22 09:30:54,208:INFO:yolo:No_break NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_193000
+2018-11-22 09:30:54,208:INFO:yolo:Sleep NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_193000
+2018-11-22 09:30:54,208:INFO:yolo:Cellphone NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_193000
+2018-11-22 09:30:54,208:INFO:yolo:Stand_2 violation NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_193000
+2018-11-22 09:31:25,699:INFO:yolo:Preparing for running yolo
+2018-11-22 09:31:25,699:INFO:yolo:Video start time get successfully
+2018-11-22 09:31:25,700:INFO:yolo:Video name get successfully
+2018-11-22 09:31:25,700:INFO:yolo:Running yolo detect function to video HXD1C0066_成都运达_02_一端司机室_20181010_184500
+2018-11-22 09:32:24,256:INFO:yolo:Yolo detect function execute successfully
+2018-11-22 09:32:24,256:INFO:yolo:Reading lkj data ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/42005001.1010.csv
+2018-11-22 09:32:24,274:INFO:yolo:LKJ file read successfully
+2018-11-22 09:32:24,274:INFO:yolo:Seperating YOLO predict result
+2018-11-22 09:32:24,275:INFO:yolo:No_break list build successfully
+2018-11-22 09:32:24,277:INFO:yolo:Sleep list build successfully
+2018-11-22 09:32:24,277:INFO:yolo:Cellphone list build successfully
+2018-11-22 09:32:24,278:INFO:yolo:Stand_2 list build successfully
+2018-11-22 09:32:24,974:INFO:yolo:LKJ data and no_break result join successfully
+2018-11-22 09:32:25,536:INFO:yolo:LKJ data and stand_2 result join successfully
+2018-11-22 09:32:30,983:INFO:yolo:no_break result insert to db successfully
+2018-11-22 09:32:30,983:INFO:yolo:Sleep NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_184500
+2018-11-22 09:32:30,983:INFO:yolo:Cellphone NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_184500
+2018-11-22 09:32:30,983:INFO:yolo:Stand_2 violation NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_184500
+2018-11-22 09:33:02,818:INFO:yolo:Preparing for running yolo
+2018-11-22 09:33:02,818:INFO:yolo:Video start time get successfully
+2018-11-22 09:33:02,818:INFO:yolo:Video name get successfully
+2018-11-22 09:33:02,818:INFO:yolo:Running yolo detect function to video HXD1C0066_成都运达_02_一端司机室_20181010_191500
+2018-11-22 09:34:00,722:INFO:yolo:Yolo detect function execute successfully
+2018-11-22 09:34:00,723:INFO:yolo:Reading lkj data ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/42005001.1010.csv
+2018-11-22 09:34:00,740:INFO:yolo:LKJ file read successfully
+2018-11-22 09:34:00,741:INFO:yolo:Seperating YOLO predict result
+2018-11-22 09:34:00,742:INFO:yolo:No_break list build successfully
+2018-11-22 09:34:00,743:INFO:yolo:Sleep list build successfully
+2018-11-22 09:34:00,744:INFO:yolo:Cellphone list build successfully
+2018-11-22 09:34:00,745:INFO:yolo:Stand_2 list build successfully
+2018-11-22 09:34:01,424:INFO:yolo:LKJ data and no_break result join successfully
+2018-11-22 09:34:01,944:INFO:yolo:LKJ data and stand_2 result join successfully
+2018-11-22 09:34:03,625:INFO:yolo:no_break result insert to db successfully
+2018-11-22 09:34:03,625:INFO:yolo:Sleep NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_191500
+2018-11-22 09:34:03,625:INFO:yolo:Cellphone NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_191500
+2018-11-22 09:34:03,625:INFO:yolo:Stand_2 violation NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_191500
+2018-11-22 09:34:33,838:INFO:yolo:Preparing for running yolo
+2018-11-22 09:34:33,838:INFO:yolo:Video start time get successfully
+2018-11-22 09:34:33,838:INFO:yolo:Video name get successfully
+2018-11-22 09:34:33,838:INFO:yolo:Running yolo detect function to video HXD1C0066_成都运达_02_一端司机室_20181010_194500
+2018-11-22 09:35:31,372:INFO:yolo:Yolo detect function execute successfully
+2018-11-22 09:35:31,373:INFO:yolo:Reading lkj data ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/42005001.1010.csv
+2018-11-22 09:35:31,390:INFO:yolo:LKJ file read successfully
+2018-11-22 09:35:31,390:INFO:yolo:Seperating YOLO predict result
+2018-11-22 09:35:31,392:INFO:yolo:No_break list build successfully
+2018-11-22 09:35:31,394:INFO:yolo:Sleep list build successfully
+2018-11-22 09:35:31,394:INFO:yolo:Cellphone list build successfully
+2018-11-22 09:35:31,395:INFO:yolo:Stand_2 list build successfully
+2018-11-22 09:35:32,071:INFO:yolo:LKJ data and no_break result join successfully
+2018-11-22 09:35:32,257:INFO:yolo:LKJ data and stand_2 result join successfully
+2018-11-22 09:35:32,325:INFO:yolo:no_break result insert to db successfully
+2018-11-22 09:35:32,325:INFO:yolo:Sleep NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_194500
+2018-11-22 09:35:32,325:INFO:yolo:Cellphone NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_194500
+2018-11-22 09:35:32,325:INFO:yolo:Stand_2 violation NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_194500
+2018-11-22 09:36:03,327:INFO:yolo:Preparing for running yolo
+2018-11-22 09:36:03,327:INFO:yolo:Video start time get successfully
+2018-11-22 09:36:03,327:INFO:yolo:Video name get successfully
+2018-11-22 09:36:03,327:INFO:yolo:Running yolo detect function to video HXD1C0066_成都运达_02_一端司机室_20181010_190000
+2018-11-22 09:37:01,297:INFO:yolo:Yolo detect function execute successfully
+2018-11-22 09:37:01,297:INFO:yolo:Reading lkj data ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/42005001.1010.csv
+2018-11-22 09:37:01,315:INFO:yolo:LKJ file read successfully
+2018-11-22 09:37:01,315:INFO:yolo:Seperating YOLO predict result
+2018-11-22 09:37:01,317:INFO:yolo:No_break list build successfully
+2018-11-22 09:37:01,318:INFO:yolo:Sleep list build successfully
+2018-11-22 09:37:01,319:INFO:yolo:Cellphone list build successfully
+2018-11-22 09:37:01,319:INFO:yolo:Stand_2 list build successfully
+2018-11-22 09:37:02,030:INFO:yolo:LKJ data and no_break result join successfully
+2018-11-22 09:37:02,459:INFO:yolo:LKJ data and stand_2 result join successfully
+2018-11-22 09:37:03,351:INFO:yolo:no_break result insert to db successfully
+2018-11-22 09:37:03,351:INFO:yolo:Sleep NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_190000
+2018-11-22 09:37:03,352:INFO:yolo:Cellphone NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_190000
+2018-11-22 09:37:03,352:INFO:yolo:Stand_2 violation NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_190000
+2018-11-22 09:37:35,574:INFO:yolo:Preparing for running yolo
+2018-11-22 09:37:35,575:INFO:yolo:Video start time get successfully
+2018-11-22 09:37:35,575:INFO:yolo:Video name get successfully
+2018-11-22 09:37:35,575:INFO:yolo:Running yolo detect function to video HXD1C0066_成都运达_02_一端司机室_20181010_173000
+2018-11-22 09:38:33,594:INFO:yolo:Yolo detect function execute successfully
+2018-11-22 09:38:33,594:INFO:yolo:Reading lkj data ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/42005001.1010.csv
+2018-11-22 09:38:33,612:INFO:yolo:LKJ file read successfully
+2018-11-22 09:38:33,612:INFO:yolo:Seperating YOLO predict result
+2018-11-22 09:38:33,614:INFO:yolo:No_break list build successfully
+2018-11-22 09:38:33,615:INFO:yolo:Sleep list build successfully
+2018-11-22 09:38:33,616:INFO:yolo:Cellphone list build successfully
+2018-11-22 09:38:33,616:INFO:yolo:Stand_2 list build successfully
+2018-11-22 09:38:34,318:INFO:yolo:LKJ data and no_break result join successfully
+2018-11-22 09:38:34,482:INFO:yolo:LKJ data and stand_2 result join successfully
+2018-11-22 09:38:34,582:INFO:yolo:no_break result insert to db successfully
+2018-11-22 09:38:34,582:INFO:yolo:Sleep NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_173000
+2018-11-22 09:38:34,583:INFO:yolo:Cellphone NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_173000
+2018-11-22 09:38:34,583:INFO:yolo:Stand_2 violation NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_173000
+2018-11-22 09:43:56,457:INFO:yolo:Initializing
+2018-11-22 09:43:56,458:INFO:yolo:Yolo parameters get successfully
+2018-11-22 09:43:56,509:INFO:yolo:Darknet import successfully
+2018-11-22 09:43:56,509:INFO:yolo:Darknet meta load successfully
+2018-11-22 09:43:59,294:INFO:yolo:Darknet network load successfully
+2018-11-22 09:43:59,294:INFO:yolo:GPU set to 0
+2018-11-22 09:44:31,260:INFO:yolo:Preparing for running yolo
+2018-11-22 09:44:31,261:INFO:yolo:Video start time get successfully
+2018-11-22 09:44:31,261:INFO:yolo:Video name get successfully
+2018-11-22 09:44:31,261:INFO:yolo:Running yolo detect function to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:45:34,423:INFO:yolo:Yolo detect function execute successfully
+2018-11-22 09:45:34,423:INFO:yolo:Reading lkj data ./video/right_back/HXD1C_66_2_42005_20181010165940_20181011023545/42005001.1010.csv
+2018-11-22 09:45:34,445:INFO:yolo:LKJ file read successfully
+2018-11-22 09:45:34,445:INFO:yolo:Seperating YOLO predict result
+2018-11-22 09:45:34,446:INFO:yolo:No_break list build successfully
+2018-11-22 09:45:34,448:INFO:yolo:Sleep list build successfully
+2018-11-22 09:45:34,448:INFO:yolo:Cellphone list build successfully
+2018-11-22 09:45:34,449:INFO:yolo:Stand_2 list build successfully
+2018-11-22 09:45:35,196:INFO:yolo:LKJ data and no_break result join successfully
+2018-11-22 09:45:35,572:INFO:yolo:LKJ data and stand_2 result join successfully
+2018-11-22 09:45:36,225:INFO:yolo:no_break result insert to db successfully
+2018-11-22 09:45:36,225:INFO:yolo:Sleep NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:45:36,225:INFO:yolo:Cellphone NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_200000
+2018-11-22 09:45:36,225:INFO:yolo:Stand_2 violation NOT detected to video HXD1C0066_成都运达_02_一端司机室_20181010_200000

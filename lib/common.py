@@ -176,7 +176,8 @@ def add_to_db(mysql_db, video_info, result_list, table_name, violate, video_obj,
         '''
         violate_st_tm = result[0]
         if save_path != None:
-            if not os.path.ispath(save_path):
+            if not os.path.isdir(save_path):
+                os.makedirs(save_path)
 
             violate_ed_tm = result[3]
             frame_st = result[1]
@@ -188,40 +189,41 @@ def add_to_db(mysql_db, video_info, result_list, table_name, violate, video_obj,
                     violate, violate_st_tm, violate_ed_tm, frame_st, frame_ed, video_url)
         else:
             sql = "insert into {0} ({1}) values (\'{2}\', \'{3}\', \'{4}\', \'{5}\', \'{6}\', \'{7}\', {8}, \'{9}\', \'{10}\', \'{11}\', \'{12}\', now(), \'{13}\')".\
-                    format(table_name, 'LKJ_FILENAME,VIDEO_FILENAME,VIDEO_STARTTIME,VIDEO_ENDTIME,TRAIN_TYPE,TRAIN_NUM,PORT,SHIFT_NUM,DRIVER,VIOLATE,START_TIME,INSERT_TIME,VIDEO_PATH',\
+                    format(table_name, 'LKJ_FILENAME,VIDEO_FILENAME,VIDEO_STARTTIME,VIDEO_ENDTIME,TRAIN_TYPE,TRAIN_NUM,CHANNEL,TRACE,DRIVER_1,VIOLATE,START_TIME,INSERT_TIME,VIDEO_PATH',\
                     lkj_filename, video_name, video_st_tm, video_ed_tm,\
                     train_type, train_num, channel, trace, driver_1,\
                     violate, violate_st_tm, video_url)
         
         mysql_logger.info('Executing insert sql: {0}'.format(sql))
         try:
-            db.Insert(sql)
+            mysql_db.Insert(sql)
             mysql_logger.info('Insert sql execute successfully')
             
             if save_path != None:
-                video_obj.write_frames(save_path, frame_st, frame_ed)
+                video_obj.write_frames(save_path, video_name, frame_st, frame_ed)
 
         except Exception:
             mysql_logger.error('Insert sql execute failed', exc_info=True)
             return False
     return True
 
-def channel_filt(leave_result, lkj_data, video_name):
+def channel_filt(result_list, lkj_df, video_name):
     '''
         this function is used for excluding non-operate
         channel by events in lkj data
         input: 
-                leave_result: openpose returned leave result list
-                lkj_data: lkj dataframe
+                result_list: openpose returned leave result list
+                lkj_df: lkj dataframe
                 video_name: video name
         output:
                 rt_list: leave result after filtering
     '''
     rt_list = []
-    for i in leave_result:
-        leave_ed_tm = i[4]
-        port_info=lkj_data[(lkj_data['事件']== '鸣笛开始') | (lkj_data['事件']== '鸣笛结束')][['时间', '其他']].drop_duplicates()
-        channel = LKJLIB.channel_filter(port_info, leave_ed_tm, 5)
+    for i in result_list:
+        leave_ed_tm = i[3]
+        lkj_channel=lkj_df[(lkj_df['事件']== '鸣笛开始') | (lkj_df['事件']== '鸣笛结束')][['时间', '其他']].drop_duplicates()
+        channel = LKJLIB.channel_filter(lkj_channel, leave_ed_tm, 5)
+        channel = channel.replace('II', '二').replace('I', '一')
         if channel != False:
             if channel in video_name:
                 rt_list.append(i)
@@ -306,7 +308,7 @@ def get_video_info(video_name, mysql_db):
     if qry_result == False:
         return [ False, 'video {0} information retrieve failed'.format(video_name) ]
     elif len(qry_result) > 1:
-        return [ False, 'video {0} is related to more than one record {1}'.format(video_name, qry_result)) ]
+        return [ False, 'video {0} is related to more than one record {1}'.format(video_name, qry_result) ]
     elif len(qry_result) <= 0:
         return [ False, 'video {0} can NOT be found in database'.format(video_name) ]
     else:

@@ -11,10 +11,10 @@ Example: N/A
 Program Message: N/A
 Remarks: N/A
 Amendment Hisotry:
-			Version:
-			Date:
-			Programmer:
-			Reason:
+            Version:
+            Date:
+            Programmer:
+            Reason:
 '''
 import os
 os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.utf8'
@@ -34,8 +34,7 @@ def init(log_name):
                 return True if all global variables are generated successfully,
                 otherwise return False
     '''
-    global main_logger, oracle_db, mysql_db#, save_tmp
-    global yolo_result = []
+    global main_logger, oracle_db, mysql_db
     main_logger = False
     oracle_db = False
     mysql_db = False
@@ -59,7 +58,8 @@ def init(log_name):
     # common.file_check(save_tmp, main_logger, 'Temp file tmp/pict.sav create failed!', 10)
     # main_logger.info('temp file {0} generate successfully'.format(save_tmp))
 
-    if main_logger != False and oracle_db != False and mysql_db != False:
+    #if main_logger != False and oracle_db != False and mysql_db != False:
+    if main_logger != False and mysql_db != False:
         main_logger.info('Initializting process successfully')
         return True
     else:
@@ -83,7 +83,7 @@ def run_yolo(video_obj, video_info, lkj_file):
     yolo_result = []
     video_name = video_info[3]
     frame_mat = video_obj.get_video_frames()
-    fps = video_obj.get_video_fps()
+    fps = video_obj.get_video_fps
 
     if frame_mat == [] or frame_mat == [[]]:
         main_logger.warning('Empty frame from video {0}'.format(video_name))
@@ -125,13 +125,13 @@ def run_yolo(video_obj, video_info, lkj_file):
 #         #yolo_rt_flag = yolo.exe(frame_mat, yolo_result, video_info, fps)
 
 def start():
-	global main_logger, video_path, mysql_db
+    global main_logger, video_path, mysql_db
     main_logger.info('Walking through path under video path {0}'.format(video_path))
-	for root,dirs,files in os.walk(video_path):
-		for item in files:
-			# check video file name
-			video_file = root + os_sep + item
-			if common.video_fname_check(video_file) == True:
+    for root,dirs,files in os.walk(video_path):
+        for item in files:
+            # check video file name
+            video_file = root + os_sep + item
+            if common.video_fname_check(video_file) == True:
                 # retrieve video information from mysql db
                 main_logger.info('Retrieving video {0} related information'.format(item))
                 video_info_rt = common.get_video_info(os.path.splitext(item)[0], mysql_db)
@@ -143,7 +143,7 @@ def start():
                     main_logger.info(video_info_rt[1])
                     
                     # fetch related lkj file
-                    lkj_file = root + os_sep + video_info[0]
+                    lkj_file = video_info[0]
                     if not os.path.isfile(lkj_file):
                         main_logger.error('LKJ file {0} does not exist'.format(lkj_file))
                     else:
@@ -169,8 +169,9 @@ def start():
 
 
 
-	       
+           
 
 if __name__ == '__main__':
-	init('run_model')
-									
+    init('run_model')
+    start()
+                                    

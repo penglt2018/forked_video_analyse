@@ -41,7 +41,7 @@ def init():
     net = dn.load_net(mdl_cfg.encode('utf-8'), weights.encode('utf-8'), 0)
     yolo_logger.info('Darknet network load successfully')
     dn.set_gpu(gpu_idx)
-    yolo_logger.info('GPU set to {0}'.format(gpu))
+    yolo_logger.info('GPU set to {0}'.format(gpu_idx))
 
 def exe_yolo(frame_mat, yolo_result, video_info, fps):
     ''' Function for executing yolo detect function and
@@ -75,10 +75,10 @@ def exe_yolo(frame_mat, yolo_result, video_info, fps):
             # else:
             #     yolo_logger.warning('no result return by yolo for picture {0}'.format(ptc))
     except Exception:
-        yolo_logger.error('Yolo execution failed with video: {0}, frame index: {1}, pixel_mat: {2}'.format(video_name, frame_index, pix_mat), exc_info=True)
+        yolo_logger.error('Yolo execution failed with video: {0}, frame index: {1}, pixel_mat: {2}'.format(video_name, frame_idx, pix_mat), exc_info=True)
         rt_flag = False
 
-    if rt_flag == True
+    if rt_flag == True:
         yolo_logger.info('Yolo detect function execute successfully')
     return rt_flag
 
