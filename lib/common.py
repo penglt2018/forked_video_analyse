@@ -92,6 +92,24 @@ def get_yolo_config():
     meta = cfg.get('yolo', 'meta')
     return dn_path, mdl_cfg, weights, meta
 
+def get_openpose_config():
+    global cfg
+    openpose_path = cfg.get('openpose', 'openpose_path')
+    params = dict()
+    params["openpose_path"] = cfg.get('openpose', 'logging_level')
+    params["output_resolution"] = cfg.get('openpose', 'output_resolution')
+    params["net_resolution"] = cfg.get('openpose', 'net_resolution')
+    params["model_pose"] = cfg.get('openpose', 'model_pose')
+    params["alpha_pose"] = cfg.get('openpose', 'alpha_pose')
+    params["scale_gap"] = cfg.get('openpose', 'scale_gap')
+    params["scale_number"] = cfg.get('openpose', 'scale_number')
+    params["render_threshold"] = cfg.get('openpose', 'render_threshold')
+    params["default_model_folder"] = cfg.get('openpose', 'default_model_folder')
+    if type(params) != dict or len(params) < 11:
+        raise_error('Error: Openpose params set wrong', 88)
+    return openpose_path, params
+    
+
 # Function to check video file name
 def video_fname_check(fname):
     ''' Function for checking video filename
@@ -456,6 +474,34 @@ def update_lkj_table(lkj_id, oracle_db):
         oracle_logger.info('Update sql execute successfully')
         return True
     except Exception:
+        oracle_logger.error('Update sql execute failed!', exc_info=True)
+        return False
+
+def update_lkj_group_table(lkj_id, oracle_db, mysql_db):
+    ''' Function for updating LKJ table in oracle database based on
+        the number of videos grouped by lkj id
+        Input:
+                lkj_id: primary key of lkj table (lkjvideoadmin.lkjvideoproblem)
+                oracle_db: Oracle database connector object
+                mysql_db: Mysql database connector object
+        return:
+                True or False for evaluation of the success of update process
+    '''
+    global oracle_logger, mysql_logger
+    mysql_logger.info('Counting number of videos related to LKJ {0}'.format(lkj_id))
+    count_sql = "select count(1) from violate_result.video_info where lkjid = {0} group by lkjid".format(lkj_id)
+    cnt_result = query_sql(count_sql)
+    #print(cnt_result)
+    cnt = cnt_result[0][0]
+
+    oracle_logger.info('Updating lkj table begin')
+    update_sql = 'update lkjvideoadmin.lkjvideoproblem set videoanalyzed = videoanalyzed + {0}, ISANALYZED = 1 where lkjid = {1}'.format(cnt, lkj_id)
+    oracle_logger.info('Executing update sql {0}'.format(update_sql))
+    try:
+        oracle_db.Exec(update_sql)
+        oracle_logger.info('Update sql execute successfully')
+        return True
+    except Exception as e:
         oracle_logger.error('Update sql execute failed!', exc_info=True)
         return False
 
