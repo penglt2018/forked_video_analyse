@@ -78,6 +78,36 @@ def get_json_file_data(json_file_in,boxin):
         else:
             return [-1]*76 #未监测到人时返回空list，供离岗识别检测使用
 
+def get_driver_coord(pose_keypoints_arr, box_data):
+    ''' Function for returning pos keypoints of driver
+        Input:
+                pose_keypoints_arr: numpy array contains several human coordinates,
+                                    return by openpose with shape (_,25,3) 
+                box_data:   custom driver coordinates range, used to exclude non-driver person
+        return:
+                [ pose_keypoints 1-D list , num of people ]
+    '''
+    num_plp_tot = len(pose_keypoints_arr)   # tot number of person in frame
+    
+    if num_plp_tot == 0:        # if no person detected
+        return [-1] * 75 + [0]  # return [-1,-1,-1,...., 0]
+    else:
+        min_idex = 0
+        plp_cnt = 0             # used for couting how many person in coordiate range box
+        for i in range(num_plp_tot):
+            x,y,c = pose_keypoints_arr[i][1]    # neck coordinate is used for check
+            # neck coordinate in the coordiate range box
+            if x > box_data[0] and x < box_data[1] and y > box_data[2] and y < box_data[3]:
+                min_idex = i
+                plp_cnt += 1
+        if plp_cnt != 1:                        # when > 1 person stay in range box
+            return [-2] * 75 + [num_plp_tot]    # return [-2,-2,-2,....., tot num of person]
+        else:
+            # flatten (_,25,3) np array to 1d list
+            pos = pose_keypoints_arr[min_idex].flatten().tolist()
+            return pos + [num_plp_tot]          # return [pose_keypoints 1-D list , num of people]
+            
+
 def read_json(json_file_path,reference_box):
     """
         获取指定路径下的所有json文件信息

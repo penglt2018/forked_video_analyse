@@ -8,8 +8,8 @@
 import numpy as np
 
 #摄像头安装在右后方
-def wrong_head(x_test):
-    data = x_test[0]
+def wrong_head(data):
+    # data = x_test[0]
     # if data.shape[0]:
     #print(data)
     if (data[45] == -2) :#不止一个人
@@ -55,7 +55,7 @@ def get_angle(data_in):
         return [int(np.round(angle1)),int(np.round(angle)),data[3],data[7]]
 
 def arm_detect(x_test):
-    data_in = x_test[0]
+    data_in = x_test
     # if data.shape[0]:
     #print(data)
     flg = 0
@@ -77,4 +77,11 @@ def arm_detect(x_test):
         else:
             flg = 4 #other
     return flg
+
+def nap_detect(data):
+    #flg = 0
+    if data[3*15+1] >= data[3*17+1]:
+        return 0
+    else:
+        return 1
     

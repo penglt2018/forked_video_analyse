@@ -209,14 +209,14 @@ def time_filter(data_in,data_lkj,speed_thresh=1,time_jump=120,row_add=5, time_ra
         resu =[]
     return resu
 
-def lkj_double_person(data_in,data_lkj,time_range=3,distance_add=30,time_continuty=10):
+def single_person(data_in,data_lkj,time_range=3,distance_add=30,time_continuty=10):
     # edited by chujp@20180911,主要进行'出站','进站'时刻数据的关联；
     """
     :param data_in:DataFrame,'时间， 帧号， 文件名，标签'，主数据源
     :param data_lkj:lkj数据，需要进行时间填充，副数据源
     :param time_range:持续时间阈值
     :param time_continuty:表示data_in的连续时间持续阈值
-    :return:data_in和lkj联合后数据，数据列同'lkj_time_filter'结果，根据需要，后续可以通过添加：'出站'、'进站'的标签
+    :return:data_in和lkj联合后数据，数据列同'time_filter'结果，根据需要，后续可以通过添加：'出站'、'进站'的标签
     """
     # df = predata(data_in)
     df = dataContinutyCut(data_in,time_continuty=time_continuty)
@@ -252,7 +252,7 @@ def lkj_double_person(data_in,data_lkj,time_range=3,distance_add=30,time_continu
             resu_gather = resu_gather+resu1
     return resu_gather
 
-def lkj_port_shift(data_in,data_lkj,st_in,et_in,time_range=20):
+def channel_shift(data_in,data_lkj,st_in,et_in,time_range=20):
     #added by chujp @20180914
     """
     :param data_in:类似于yolo_event_relate中的第一个输入；
@@ -393,76 +393,134 @@ def lkj_event_exclude(data_in,data_lkj,eve_st,eve_ed,video_tm_range,time_range=1
             break
     return resu_out
 
-def arm_detect_filter(data_yolo,df_lkj_input,time_range,tm_bx_st,tm_bx_ed,motion_yolo,event_list,lkj_condi,speed_thresh):
-    #motion_yolo为列表或者tuple
-    df_lkj = df_lkj_input.copy()
-    #print(data_yolo)
-    col_yolo = ['time', 'frame', 'filename', 'motion'] + ['col_%s' % i for i in range(len(data_yolo[0]) - 4)]
-    df_yolo = pd.DataFrame(data_yolo,columns=col_yolo)
-    df_yolo.insert(0,'timestamp',list(map(func_stamp,df_yolo['time'])))
-    if motion_yolo != []:
-        df_yolo_fil = df_yolo[df_yolo['motion'].isin(motion_yolo)]
+def arm_detect_filter(model_data, df_lkj_input, time_range, motion, event_list, lkj_condi,
+                      speed_thresh, distance_thresh):
+    """
+    进行lkj和yolo结果的数据关联，分为两部分数据：
+    YOLO：转为DataFrame，进行motion过滤
+    LKJ：首先对lkj数据：“事件”进行event_list查找，按照里程和速度进行数据段筛选，找出各数据段起始时间和结束事件，
+    对model_data时间列进行筛选，筛选后数据行数==0的输出对应的LKJ事件时间；
+    :param model_data:yolo数据
+    :param df_lkj_input:lkj输入数据,全字段数据
+    :param time_range:lkj数据时间大的范围
+    :param motion_yolo:yolo动作结果过滤
+    :param event_list:lkj判断事件，类型为list
+    :param lkj_condi:lkj筛选条件
+    :param speed_thresh:lkj速度限制
+    :param distance_thresh:离程限制
+    :return:yolo时间匹配不上的lkj事件所在行集合
+    """
+    # motion为列表或者tuple
+    name_lkj = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
+                 '前后', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
+    out_col = ['时间', '信号', '事件', '距离']
+    # print(model_data)
+    col_yolo = ['time', 'frame', 'filename', 'motion'] + ['col_%s' % i for i in range(len(model_data[0]) - 4)]
+    df_yolo = pd.DataFrame(model_data, columns=col_yolo)
+    df_yolo.insert(0, 'timestamp', list(map(func_stamp, df_yolo['time'])))
+    if motion != []:
+        df_yolo_fil = df_yolo[df_yolo['motion'].isin(motion)]
     else:
         df_yolo_fil = df_yolo
-    df_lkj.columns = ['time','signal','event','speed']
-    df_lkj.insert(0,'timestamp',list(map(func_stamp,df_lkj['time'])))
+    df_lkj = pd.DataFrame(df_lkj_input, names=name_lkj)
+    df_lkj.insert(0, 'timestamp', list(map(func_stamp, df_lkj['时间'])))
     st_time = func_stamp(time_range[0])
     ed_time = func_stamp(time_range[1])
-    df_lkj_1 = df_lkj[(df_lkj['timestamp']>=st_time) &(df_lkj['timestamp']<=ed_time)]
-    #print(event_list)
-    if event_list != []:
-        df_lkj_1 = df_lkj_1[df_lkj_1['event'].isin(event_list)].reset_index(drop=True)
-    else:
-        df_lkj_1 = df_lkj_1.reset_index(drop=True)
-    df_lkj_fil = df_lkj_1[(df_lkj_1['signal'].isin(lkj_condi)) & (df_lkj_1['speed'] > speed_thresh)]
-    #print(df_lkj_fil)
-    
-    #calcu the effect lkj continuous time
-    lkj_list = df_lkj_fil['timestamp'].values.tolist()
-
-    #out_lkj为对应不在yolo一定距离内的时间
+    df_lkj = df_lkj[(df_lkj['timestamp'] >= st_time) & (df_lkj['timestamp'] <= ed_time)].sort_values(by='timestamp')\
+        .reset_index(drop=True)
+    # print(event_list)
+    #start to calcu the out lkj row
     out_lkj = []
-    for item in lkj_list:
-        if df_yolo_fil[df_yolo_fil['timestamp'].isin([item+j for j in range(-tm_bx_st,tm_bx_ed)])].shape[0] == 0:
-            out_lkj.append(item)
+    lkj_end_list = df_lkj[df_lkj['event'].isin(event_list)].index.tolist()
+    for key,item in enumerate(lkj_end_list):
+        if item != 0:
+            if key == 0:
+                df_lkj_part = df_lkj.loc[0:item]
+                df_lkj_part.insert(df_lkj_part.shape[1],'distance_judge',df_lkj_part['距离']-distance_thresh)
+                df_lkj_part2 = df_lkj_part[df_lkj_part['distance_judge']>=0]
+                row_select = df_lkj_part2[df_lkj_part2['distance_judge']==df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                df_lkj_fil_1 = df_lkj_part.loc[row_select:item]
+                df_lkj_fil_2 = df_lkj_fil_1[(df_lkj_fil_1['signal'].isin(lkj_condi)) & (df_lkj_fil_1['speed'] > speed_thresh)]
+                st_time_local = df_lkj_fil_2['timestamp'].min()
+                ed_time_local = df_lkj_fil_2['timestamp'].max()
+                if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] == 0:
+                    out_lkj.append(item)
+            else:
+                df_lkj_part = df_lkj.loc[lkj_end_list[key-1]+1:item]
+                df_lkj_part.insert(df_lkj_part.shape[1], 'distance_judge', df_lkj_part['距离']-distance_thresh)
+                df_lkj_part2 = df_lkj_part[df_lkj_part['distance_judge'] >= 0]
+                row_select = df_lkj_part2[df_lkj_part2['distance_judge'] == df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                df_lkj_fil_1 = df_lkj_part.loc[row_select:item]
+                df_lkj_fil_2 = df_lkj_fil_1[(df_lkj_fil_1['signal'].isin(lkj_condi)) & (df_lkj_fil_1['speed'] > speed_thresh)]
+                st_time_local = df_lkj_fil_2['timestamp'].min()
+                ed_time_local = df_lkj_fil_2['timestamp'].max()
+                if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] == 0:
+                    out_lkj.append(item)
+    return df_lkj.loc[out_lkj,out_col].values.tolist()
 
-    df_lkj_out = df_lkj_fil[df_lkj_fil['timestamp'].isin(out_lkj)]
-    #print(df_lkj_out)
-    df_lkj_resu = df_lkj_out.drop_duplicates()
-    return df_lkj_resu[['time','signal','event','speed']].values.tolist()
 
-
-def arm_detect_include_filter(data_yolo,df_lkj_input,time_range,tm_bx_st,tm_bx_ed,motion_yolo,event_list,lkj_condi,speed_thresh):
-    #motion_yolo为列表或者tuple
-    df_lkj = df_lkj_input.copy()
-    col_yolo = ['time', 'frame', 'filename', 'motion'] + ['col_%s' % i for i in range(len(data_yolo[0]) - 4)]
-    df_yolo = pd.DataFrame(data_yolo,columns=col_yolo)
-    df_yolo.insert(0,'timestamp',list(map(func_stamp,df_yolo['time'])))
-    if motion_yolo != []:
-        df_yolo_fil = df_yolo[df_yolo['motion'].isin(motion_yolo)]
+def arm_detect_include_filter(model_data, df_lkj_input, time_range, motion, event_list, lkj_condi,
+                      speed_thresh, distance_thresh):
+    """
+    进行lkj和yolo结果的数据关联，分为两部分数据：
+    YOLO：转为DataFrame，进行motion过滤
+    LKJ：首先对lkj数据：“事件”进行event_list查找，按照里程和速度进行数据段筛选，找出各数据段起始时间和结束事件，
+    对model_data时间列进行筛选，筛选后数据行数==0的输出对应的LKJ事件时间；
+    :param model_data:yolo数据
+    :param df_lkj_input:lkj输入数据,全字段数据
+    :param time_range:lkj数据时间大的范围
+    :param motion_yolo:yolo动作结果过滤
+    :param event_list:lkj判断事件，类型为list
+    :param lkj_condi:lkj筛选条件
+    :param speed_thresh:lkj速度限制
+    :param distance_thresh:离程限制
+    :return:yolo时间匹配不上的lkj事件所在行集合
+    """
+    # motion为列表或者tuple
+    name_lkj = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
+                 '前后', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
+    out_col = ['时间', '信号', '事件', '距离']
+    # print(model_data)
+    col_yolo = ['time', 'frame', 'filename', 'motion'] + ['col_%s' % i for i in range(len(model_data[0]) - 4)]
+    df_yolo = pd.DataFrame(model_data, columns=col_yolo)
+    df_yolo.insert(0, 'timestamp', list(map(func_stamp, df_yolo['time'])))
+    if motion != []:
+        df_yolo_fil = df_yolo[df_yolo['motion'].isin(motion)]
     else:
         df_yolo_fil = df_yolo
-    df_lkj.columns = ['time','signal','event','speed']
-    df_lkj.insert(0,'timestamp',list(map(func_stamp,df_lkj['time'])))
+    df_lkj = pd.DataFrame(df_lkj_input, names=name_lkj)
+    df_lkj.insert(0, 'timestamp', list(map(func_stamp, df_lkj['时间'])))
     st_time = func_stamp(time_range[0])
     ed_time = func_stamp(time_range[1])
-    df_lkj_1 = df_lkj[(df_lkj['timestamp']>=st_time) &(df_lkj['timestamp']<=ed_time)]
-    if event_list != []:
-        df_lkj_1 = df_lkj_1[df_lkj_1['event'].isin(event_list)].reset_index(drop=True)
-    else:
-        df_lkj_1 = df_lkj_1.reset_index(drop=True)
-
-    df_lkj_fil = df_lkj_1[(df_lkj_1['signal'].isin(lkj_condi)) & (df_lkj_1['speed'] > speed_thresh)]
-    #calcu the effect lkj continuous time
-    lkj_list = df_lkj_fil['timestamp'].values.tolist()
-
-    #out_lkj为对应不在yolo一定距离内的时间
+    df_lkj = df_lkj[(df_lkj['timestamp'] >= st_time) & (df_lkj['timestamp'] <= ed_time)].sort_values(by='timestamp')\
+        .reset_index(drop=True)
+    # print(event_list)
+    #start to calcu the out lkj row
     out_lkj = []
-    for item in lkj_list:
-        if df_yolo_fil[df_yolo_fil['timestamp'].isin([item+j for j in range(-tm_bx_st,tm_bx_ed)])].shape[0] > 0:
-            out_lkj.append(item)
+    lkj_end_list = df_lkj[df_lkj['event'].isin(event_list)].index.tolist()
+    for key,item in enumerate(lkj_end_list):
+        if item != 0:
+            if key == 0:
+                df_lkj_part = df_lkj.loc[0:item]
+                df_lkj_part.insert(df_lkj_part.shape[1],'distance_judge',df_lkj_part['距离']-distance_thresh)
+                df_lkj_part2 = df_lkj_part[df_lkj_part['distance_judge']>=0]
+                row_select = df_lkj_part2[df_lkj_part2['distance_judge']==df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                df_lkj_fil_1 = df_lkj_part.loc[row_select:item]
+                df_lkj_fil_2 = df_lkj_fil_1[(df_lkj_fil_1['signal'].isin(lkj_condi)) & (df_lkj_fil_1['speed'] > speed_thresh)]
+                st_time_local = df_lkj_fil_2['timestamp'].min()
+                ed_time_local = df_lkj_fil_2['timestamp'].max()
+                if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] > 0:
+                    out_lkj.append(item)
+            else:
+                df_lkj_part = df_lkj.loc[lkj_end_list[key-1]+1:item]
+                df_lkj_part.insert(df_lkj_part.shape[1], 'distance_judge', df_lkj_part['距离']-distance_thresh)
+                df_lkj_part2 = df_lkj_part[df_lkj_part['distance_judge'] >= 0]
+                row_select = df_lkj_part2[df_lkj_part2['distance_judge'] == df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                df_lkj_fil_1 = df_lkj_part.loc[row_select:item]
+                df_lkj_fil_2 = df_lkj_fil_1[(df_lkj_fil_1['signal'].isin(lkj_condi)) & (df_lkj_fil_1['speed'] > speed_thresh)]
+                st_time_local = df_lkj_fil_2['timestamp'].min()
+                ed_time_local = df_lkj_fil_2['timestamp'].max()
+                if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] > 0:
+                    out_lkj.append(item)
+    return df_lkj.loc[out_lkj,out_col].values.tolist()
 
-    df_lkj_out = df_lkj_fil[df_lkj_fil['timestamp'].isin(out_lkj)]
-
-    df_lkj_resu = df_lkj_out.drop_duplicates()
-    return df_lkj_resu[['time','signal','event','speed']].values.tolist()
