@@ -3,14 +3,14 @@
 
 
 #save_info=`mysql -uroot -p123456 -e "select video_filename,start_frame,end_frame from violate_result.report where start_frame is not null;" 2>/dev/null |sed '1d'`
-save_info=`cat tmp/pict.sav`
-for i in `echo "$save_info"`;do
-	fname=`echo "$i" |awk -F "," '{print $1}'`
-	start_frame=`echo "$i" |awk -F "," '{print $2}'`
-	end_frame=`echo "$i" |awk -F "," '{print $3}'`
-	dir=`find frame |grep "$fname" |head -1`
-	eval ls $dir/$fname'_'{$start_frame..$end_frame}'.png' 2>/dev/null |xargs -i cp {} ./store
-done
+#save_info=`cat tmp/pict.sav`
+#for i in `echo "$save_info"`;do
+#	fname=`echo "$i" |awk -F "," '{print $1}'`
+#	start_frame=`echo "$i" |awk -F "," '{print $2}'`
+#	end_frame=`echo "$i" |awk -F "," '{print $3}'`
+#	dir=`find frame |grep "$fname" |head -1`
+#	eval ls $dir/$fname'_'{$start_frame..$end_frame}'.png' 2>/dev/null |xargs -i cp {} ./store
+#done
 
 mysql -uroot -p123456 -e "truncate table violate_result.video_info"
 
@@ -35,4 +35,4 @@ rm -rf video/right/*
 rm -rf video/right_back/*
 #mv video/right_back/* video_bk/
 
-rm -rf tmp/*
+#rm -rf tmp/*

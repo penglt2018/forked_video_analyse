@@ -96,14 +96,16 @@ def get_openpose_config():
     global cfg
     openpose_path = cfg.get('openpose', 'openpose_path')
     params = dict()
-    params["openpose_path"] = cfg.get('openpose', 'logging_level')
+    params["logging_level"] = int(cfg.get('openpose', 'logging_level'))
     params["output_resolution"] = cfg.get('openpose', 'output_resolution')
     params["net_resolution"] = cfg.get('openpose', 'net_resolution')
     params["model_pose"] = cfg.get('openpose', 'model_pose')
-    params["alpha_pose"] = cfg.get('openpose', 'alpha_pose')
-    params["scale_gap"] = cfg.get('openpose', 'scale_gap')
-    params["scale_number"] = cfg.get('openpose', 'scale_number')
-    params["render_threshold"] = cfg.get('openpose', 'render_threshold')
+    params["alpha_pose"] = float(cfg.get('openpose', 'alpha_pose'))
+    params["scale_gap"] = float(cfg.get('openpose', 'scale_gap'))
+    params["scale_number"] = int(cfg.get('openpose', 'scale_number'))
+    params["render_threshold"] = float(cfg.get('openpose', 'render_threshold'))
+    params["num_gpu_start"] = int(cfg.get('openpose', 'num_gpu_start'))
+    params["disable_blending"] = False
     params["default_model_folder"] = cfg.get('openpose', 'default_model_folder')
     if type(params) != dict or len(params) < 11:
         raise_error('Error: Openpose params set wrong', 88)
@@ -189,8 +191,8 @@ def add_to_db(mysql_db, video_info, result_list, table_name, violate, video_obj,
     for result in result_list:
         '''
         result list format:
-            [ violate_st_tm, violate_st_frame_idx, label,
-            violate_ed_tm, violate_ed_frame_idx, label ]
+            [ violate_st_tm, violate_st_frame_idx, speed,
+            violate_ed_tm, violate_ed_frame_idx, speed ]
         '''
         violate_st_tm = result[0]
         if save_path != None:
@@ -201,13 +203,13 @@ def add_to_db(mysql_db, video_info, result_list, table_name, violate, video_obj,
             frame_st = result[1]
             frame_ed = result[4]
 
-            sql = "insert into {0} values (\'{1}\', \'{2}\', \'{3}\', \'{4}\', \'{5}\', \'{6}\', \'{7}\', {8}, \'{9}\', \'{10}\', \'{11}\', \'{12}\', \'{13}\', \'{14}\', now(), \'{15}\')".\
+            sql = "insert into {0} values (\'{1}\', \'{2}\', \'{3}\', \'{4}\', \'{5}\', \'{6}\', \'{7}\', \'{8}\', \'{9}\', \'{10}\', \'{11}\', \'{12}\', \'{13}\', \'{14}\', now(), \'{15}\')".\
                     format(table_name, lkj_filename, video_name, video_st_tm, video_ed_tm, \
                     train_type, train_num, channel, trace, driver_1, \
                     violate, violate_st_tm, violate_ed_tm, frame_st, frame_ed, video_url)
         else:
-            sql = "insert into {0} ({1}) values (\'{2}\', \'{3}\', \'{4}\', \'{5}\', \'{6}\', \'{7}\', {8}, \'{9}\', \'{10}\', \'{11}\', \'{12}\', now(), \'{13}\')".\
-                    format(table_name, 'LKJ_FILENAME,VIDEO_FILENAME,VIDEO_STARTTIME,VIDEO_ENDTIME,TRAIN_TYPE,TRAIN_NUM,CHANNEL,TRACE,DRIVER_1,VIOLATE,START_TIME,INSERT_TIME,VIDEO_PATH',\
+            sql = "insert into {0} ({1}) values (\'{2}\', \'{3}\', \'{4}\', \'{5}\', \'{6}\', \'{7}\', \'{8}\', \'{9}\', \'{10}\', \'{11}\', \'{12}\', now(), \'{13}\')".\
+                    format(table_name, 'LKJ_FILENAME,VIDEO_FILENAME,VIDEO_STARTTIME,VIDEO_ENDTIME,TRAIN_TYPE,TRAIN_NUM,PORT,SHIFT_NUM,DRIVER,VIOLATE,START_TIME,INSERT_TIME,VIDEO_PATH',\
                     lkj_filename, video_name, video_st_tm, video_ed_tm,\
                     train_type, train_num, channel, trace, driver_1,\
                     violate, violate_st_tm, video_url)
@@ -260,7 +262,7 @@ def get_frame_time(fps,video_st_time,frame_index):
             转换后的时间(格式为:'%Y-%m-%d %H:%M:%S')
     """
     st_time_timestamp = time.mktime(time.strptime(video_st_time, '%Y-%m-%d %H:%M:%S'))
-    frame_timestamp = st_time_timestamp + int(int(frame_index) / int(fps))
+    frame_timestamp = st_time_timestamp + int(int(frame_index) / (fps))
     frame_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(frame_timestamp))
     return frame_time
 
@@ -275,6 +277,9 @@ def append_result(arr, frame_index, fps, video_st_time, label):
         return:
                 None
     '''
+    #if frame_index >= 5816 and frame_index <= 5824:
+        #print('++++++++++++++++++++++')
+        #print(frame_index, get_frame_time(fps, video_st_time,frame_index), label)
     arr.append([get_frame_time(fps, video_st_time,frame_index), frame_index, label])
 
 def get_lkj(lkj_local_file):
@@ -489,8 +494,8 @@ def update_lkj_group_table(lkj_id, oracle_db, mysql_db):
     '''
     global oracle_logger, mysql_logger
     mysql_logger.info('Counting number of videos related to LKJ {0}'.format(lkj_id))
-    count_sql = "select count(1) from violate_result.video_info where lkjid = {0} group by lkjid".format(lkj_id)
-    cnt_result = query_sql(count_sql)
+    count_sql = "select count(1) from violate_result.video_info where lkj_id = {0} group by lkj_id".format(lkj_id)
+    cnt_result = query_sql(mysql_db, 'mysql', count_sql)
     #print(cnt_result)
     cnt = cnt_result[0][0]
 
@@ -517,6 +522,19 @@ def update_video_table(video_id, video_source, oracle_db):
     global oracle_logger
     oracle_logger.info('Updating video table begin')
     sql = "update lkjvideoadmin.LAVDR set ISANALYZED = 1 where id = \'{0}\' and DATASOURCE = \'{1}\'".format(video_id, video_source)
+    oracle_logger.info('Executing update sql: {0}'.format(sql))
+    try:
+        oracle_db.Exec(sql)
+        oracle_logger.info('Update sql execute successfully')
+        return True
+    except Exception:
+        oracle_logger.error('Update sql execute failed!', exc_info=True)
+        return False
+
+def update_video_table_with_name(video_name, oracle_db):
+    global oracle_logger
+    oracle_logger.info('Updating video table begin')
+    sql = "update lkjvideoadmin.LAVDR set ISANALYZED = 1 where filepath like \'%{0}%\'".format(video_name)
     oracle_logger.info('Executing update sql: {0}'.format(sql))
     try:
         oracle_db.Exec(sql)

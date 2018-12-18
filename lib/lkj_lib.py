@@ -204,7 +204,8 @@ def time_filter(data_in,data_lkj,speed_thresh=1,time_jump=120,row_add=5, time_ra
     df = df[df['速度']>=speed_thresh].sort_values(by='timestamp').reset_index(drop=True)
     if df.shape[0] > 0:
         para = conti_check_v2(df)
-        resu = select_proper(df,para,col_data,time_range)
+        #resu = select_proper(df,para,col_data,time_range)
+        resu = select_proper(df, para, ['time', 'frame', '速度'], time_range)
     else:
         resu =[]
     return resu
@@ -252,7 +253,7 @@ def single_person(data_in,data_lkj,time_range=3,distance_add=30,time_continuty=1
             resu_gather = resu_gather+resu1
     return resu_gather
 
-def channel_shift(data_in,data_lkj,st_in,et_in,time_range=20):
+def channel_shift(data_in,lkj_data,st_in,et_in,time_range=20):
     #added by chujp @20180914
     """
     :param data_in:类似于yolo_event_relate中的第一个输入；
@@ -268,6 +269,7 @@ def channel_shift(data_in,data_lkj,st_in,et_in,time_range=20):
     # col_data = ['time', 'frame']+list(map(lambda x:'col_'+str(x),range(len(data_in[0])-2)))
     resu_out = []
     #lkj数据有效性筛选
+    data_lkj = lkj_data.copy()
     data_lkj.insert(data_lkj.shape[1],'timestamp',list(map(func_stamp,data_lkj['时间'])))
     data_lkj = data_lkj[(data_lkj['timestamp'] > func_stamp(st_in)) & (data_lkj['timestamp'] < func_stamp(et_in))]
     end_reverse = ['I端开始','I端结束','II端开始','II端结束']
@@ -407,7 +409,7 @@ def arm_detect_filter(model_data, df_lkj_input, time_range, motion, event_list, 
     :param event_list:lkj判断事件，类型为list
     :param lkj_condi:lkj筛选条件
     :param speed_thresh:lkj速度限制
-    :param distance_thresh:离程限制
+    :param distance_thresh:离程限制,单位为km
     :return:yolo时间匹配不上的lkj事件所在行集合
     """
     # motion为列表或者tuple
@@ -415,14 +417,15 @@ def arm_detect_filter(model_data, df_lkj_input, time_range, motion, event_list, 
                  '前后', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
     out_col = ['时间', '信号', '事件', '距离']
     # print(model_data)
-    col_yolo = ['time', 'frame', 'filename', 'motion'] + ['col_%s' % i for i in range(len(model_data[0]) - 4)]
+    col_yolo = ['time', 'frame', 'motion'] + ['col_%s' % i for i in range(len(model_data[0]) - 4)]
     df_yolo = pd.DataFrame(model_data, columns=col_yolo)
     df_yolo.insert(0, 'timestamp', list(map(func_stamp, df_yolo['time'])))
     if motion != []:
         df_yolo_fil = df_yolo[df_yolo['motion'].isin(motion)]
     else:
         df_yolo_fil = df_yolo
-    df_lkj = pd.DataFrame(df_lkj_input, names=name_lkj)
+    df_lkj_cp = df_lkj_input.copy()
+    df_lkj = pd.DataFrame(df_lkj_cp, columns=name_lkj)
     df_lkj.insert(0, 'timestamp', list(map(func_stamp, df_lkj['时间'])))
     st_time = func_stamp(time_range[0])
     ed_time = func_stamp(time_range[1])
@@ -431,31 +434,68 @@ def arm_detect_filter(model_data, df_lkj_input, time_range, motion, event_list, 
     # print(event_list)
     #start to calcu the out lkj row
     out_lkj = []
-    lkj_end_list = df_lkj[df_lkj['event'].isin(event_list)].index.tolist()
+    lkj_end_list = df_lkj[df_lkj['事件'].isin(event_list) & (df_lkj['信号'].isin(lkj_condi))].index.tolist()
     for key,item in enumerate(lkj_end_list):
         if item != 0:
             if key == 0:
                 df_lkj_part = df_lkj.loc[0:item]
-                df_lkj_part.insert(df_lkj_part.shape[1],'distance_judge',df_lkj_part['距离']-distance_thresh)
+                
+
+                df_lkj_part = df_lkj_part.loc[pd.notnull(df_lkj_part['里程']).index.tolist()]
+                df_lkj_part.insert(df_lkj_part.shape[1],'distanceToInitial',np.abs(df_lkj_part['里程']-df_lkj_part.loc[item,'里程'])*1000)
+                df_lkj_part.insert(df_lkj_part.shape[1],'distance_judge',df_lkj_part['distanceToInitial']-distance_thresh)
+
+                ##通过event_list选择第一个终止行
+                df_lkj_addix = df_lkj_part.iloc[:-1]
+                index_stop = df_lkj_addix[df_lkj_addix['事件'].isin(event_list)].index.tolist()
+                if len(index_stop) == 0:
+                    row_stop = 0
+                else:
+                    row_stop = index_stop[-1]
+
                 df_lkj_part2 = df_lkj_part[df_lkj_part['distance_judge']>=0]
-                row_select = df_lkj_part2[df_lkj_part2['distance_judge']==df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                if df_lkj_part2.shape[0] != 0:
+                    row_select = df_lkj_part2[df_lkj_part2['distance_judge']==df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                else:
+                    row_select = 0
+
+                row_select = max(row_stop,row_select)
+
                 df_lkj_fil_1 = df_lkj_part.loc[row_select:item]
-                df_lkj_fil_2 = df_lkj_fil_1[(df_lkj_fil_1['signal'].isin(lkj_condi)) & (df_lkj_fil_1['speed'] > speed_thresh)]
-                st_time_local = df_lkj_fil_2['timestamp'].min()
-                ed_time_local = df_lkj_fil_2['timestamp'].max()
-                if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] == 0:
-                    out_lkj.append(item)
+                df_lkj_fil_2 = df_lkj_fil_1[df_lkj_fil_1['速度'] > speed_thresh]
+                if df_lkj_fil_2.shape[0]>0:
+                    st_time_local = df_lkj_fil_2['timestamp'].min()
+                    ed_time_local = df_lkj_fil_2['timestamp'].max()
+                    if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] == 0:
+                        out_lkj.append(item) # 取LKJ关联数据最后一行
+                        #out_lkj.append(row_select) # 取LKJ关联数据最开始一行
             else:
                 df_lkj_part = df_lkj.loc[lkj_end_list[key-1]+1:item]
-                df_lkj_part.insert(df_lkj_part.shape[1], 'distance_judge', df_lkj_part['距离']-distance_thresh)
+
+                df_lkj_part = df_lkj_part.loc[pd.notnull(df_lkj_part['里程']).index.tolist()]
+                df_lkj_part.insert(df_lkj_part.shape[1],'distanceToInitial',np.abs(df_lkj_part['里程']-df_lkj_part.loc[item,'里程'])*1000)
+                df_lkj_part.insert(df_lkj_part.shape[1],'distance_judge',df_lkj_part['distanceToInitial']-distance_thresh)
                 df_lkj_part2 = df_lkj_part[df_lkj_part['distance_judge'] >= 0]
-                row_select = df_lkj_part2[df_lkj_part2['distance_judge'] == df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                if df_lkj_part2.shape[0] != 0:
+                    row_select = df_lkj_part2[df_lkj_part2['distance_judge'] == df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                else:
+                    row_select = lkj_end_list[key-1]+1
+                ##通过event_list选择第一个终止行
+                df_lkj_addix = df_lkj_part.iloc[:-1]
+                index_stop = df_lkj_addix[df_lkj_addix['事件'].isin(event_list)].index.tolist()
+                if len(index_stop) == 0:
+                    row_stop = 0
+                else:
+                    row_stop = index_stop[-1]
+                row_select = max(row_stop,row_select)
                 df_lkj_fil_1 = df_lkj_part.loc[row_select:item]
-                df_lkj_fil_2 = df_lkj_fil_1[(df_lkj_fil_1['signal'].isin(lkj_condi)) & (df_lkj_fil_1['speed'] > speed_thresh)]
-                st_time_local = df_lkj_fil_2['timestamp'].min()
-                ed_time_local = df_lkj_fil_2['timestamp'].max()
-                if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] == 0:
-                    out_lkj.append(item)
+                df_lkj_fil_2 = df_lkj_fil_1[df_lkj_fil_1['速度'] > speed_thresh]
+                if df_lkj_fil_2.shape[0]>0:
+                    st_time_local = df_lkj_fil_2['timestamp'].min()
+                    ed_time_local = df_lkj_fil_2['timestamp'].max()
+                    if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] == 0:
+                        out_lkj.append(item) # 取LKJ关联数据最后一行
+                        #out_lkj.append(row_select) # 取LKJ关联数据最开始一行
     return df_lkj.loc[out_lkj,out_col].values.tolist()
 
 
@@ -481,14 +521,15 @@ def arm_detect_include_filter(model_data, df_lkj_input, time_range, motion, even
                  '前后', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
     out_col = ['时间', '信号', '事件', '距离']
     # print(model_data)
-    col_yolo = ['time', 'frame', 'filename', 'motion'] + ['col_%s' % i for i in range(len(model_data[0]) - 4)]
+    col_yolo = ['time', 'frame', 'motion'] + ['col_%s' % i for i in range(len(model_data[0]) - 4)]
     df_yolo = pd.DataFrame(model_data, columns=col_yolo)
     df_yolo.insert(0, 'timestamp', list(map(func_stamp, df_yolo['time'])))
     if motion != []:
         df_yolo_fil = df_yolo[df_yolo['motion'].isin(motion)]
     else:
         df_yolo_fil = df_yolo
-    df_lkj = pd.DataFrame(df_lkj_input, names=name_lkj)
+    df_lkj_cp = df_lkj_input.copy()
+    df_lkj = pd.DataFrame(df_lkj_cp, columns=name_lkj)
     df_lkj.insert(0, 'timestamp', list(map(func_stamp, df_lkj['时间'])))
     st_time = func_stamp(time_range[0])
     ed_time = func_stamp(time_range[1])
@@ -497,30 +538,65 @@ def arm_detect_include_filter(model_data, df_lkj_input, time_range, motion, even
     # print(event_list)
     #start to calcu the out lkj row
     out_lkj = []
-    lkj_end_list = df_lkj[df_lkj['event'].isin(event_list)].index.tolist()
+    lkj_end_list = df_lkj[df_lkj['事件'].isin(event_list) & (df_lkj['信号'].isin(lkj_condi))].index.tolist()
     for key,item in enumerate(lkj_end_list):
         if item != 0:
             if key == 0:
                 df_lkj_part = df_lkj.loc[0:item]
-                df_lkj_part.insert(df_lkj_part.shape[1],'distance_judge',df_lkj_part['距离']-distance_thresh)
+
+                df_lkj_part = df_lkj_part.loc[pd.notnull(df_lkj_part['里程']).index.tolist()]
+                df_lkj_part.insert(df_lkj_part.shape[1],'distanceToInitial',np.abs(df_lkj_part['里程']-df_lkj_part.loc[item,'里程'])*1000)
+                df_lkj_part.insert(df_lkj_part.shape[1],'distance_judge',df_lkj_part['distanceToInitial']-distance_thresh)
+
                 df_lkj_part2 = df_lkj_part[df_lkj_part['distance_judge']>=0]
-                row_select = df_lkj_part2[df_lkj_part2['distance_judge']==df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                if df_lkj_part2.shape[0] != 0:
+                    row_select1 = df_lkj_part2[df_lkj_part2['distance_judge']==df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                else:
+                    row_select1 = 0
+                ##通过event_list选择第一个终止行
+                df_lkj_addix = df_lkj_part.iloc[:-1]
+                index_stop = df_lkj_addix[df_lkj_addix['事件'].isin(event_list)].index.tolist()
+                if len(index_stop) == 0:
+                    row_stop = 0
+                else:
+                    row_stop = index_stop[-1]
+                row_select = max(row_stop,row_select1)
+
                 df_lkj_fil_1 = df_lkj_part.loc[row_select:item]
-                df_lkj_fil_2 = df_lkj_fil_1[(df_lkj_fil_1['signal'].isin(lkj_condi)) & (df_lkj_fil_1['speed'] > speed_thresh)]
-                st_time_local = df_lkj_fil_2['timestamp'].min()
-                ed_time_local = df_lkj_fil_2['timestamp'].max()
-                if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] > 0:
-                    out_lkj.append(item)
+                df_lkj_fil_2 = df_lkj_fil_1[df_lkj_fil_1['速度'] > speed_thresh]
+                if df_lkj_fil_2.shape[0] > 0:
+                    st_time_local = df_lkj_fil_2['timestamp'].min()
+                    ed_time_local = df_lkj_fil_2['timestamp'].max()
+                    if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] > 0:
+                        out_lkj.append(item) # 取LKJ关联数据最后一行
+                        #out_lkj.append(row_select) # 取LKJ关联数据最开始一行
             else:
                 df_lkj_part = df_lkj.loc[lkj_end_list[key-1]+1:item]
-                df_lkj_part.insert(df_lkj_part.shape[1], 'distance_judge', df_lkj_part['距离']-distance_thresh)
+
+                df_lkj_part = df_lkj_part.loc[pd.notnull(df_lkj_part['里程']).index.tolist()]
+                df_lkj_part.insert(df_lkj_part.shape[1],'distanceToInitial',np.abs(df_lkj_part['里程']-df_lkj_part.loc[item,'里程'])*1000)
+                df_lkj_part.insert(df_lkj_part.shape[1],'distance_judge',df_lkj_part['distanceToInitial']-distance_thresh)
+
                 df_lkj_part2 = df_lkj_part[df_lkj_part['distance_judge'] >= 0]
-                row_select = df_lkj_part2[df_lkj_part2['distance_judge'] == df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                if df_lkj_part2.shape[0] != 0:
+                    row_select1 = df_lkj_part2[df_lkj_part2['distance_judge'] == df_lkj_part2['distance_judge'].min()].index.tolist()[0]
+                else:
+                    row_select1 = lkj_end_list[key-1]+1
+                ##通过event_list选择第一个终止行
+                df_lkj_addix = df_lkj_part.iloc[:-1]
+                index_stop = df_lkj_addix[df_lkj_addix['事件'].isin(event_list)].index.tolist()
+                if len(index_stop) == 0:
+                    row_stop = 0
+                else:
+                    row_stop = index_stop[-1]
+                row_select = max(row_stop,row_select1)
                 df_lkj_fil_1 = df_lkj_part.loc[row_select:item]
-                df_lkj_fil_2 = df_lkj_fil_1[(df_lkj_fil_1['signal'].isin(lkj_condi)) & (df_lkj_fil_1['speed'] > speed_thresh)]
-                st_time_local = df_lkj_fil_2['timestamp'].min()
-                ed_time_local = df_lkj_fil_2['timestamp'].max()
-                if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] > 0:
-                    out_lkj.append(item)
+                df_lkj_fil_2 = df_lkj_fil_1[df_lkj_fil_1['速度'] > speed_thresh]
+                if df_lkj_fil_2.shape[0]>0:
+                    st_time_local = df_lkj_fil_2['timestamp'].min()
+                    ed_time_local = df_lkj_fil_2['timestamp'].max()
+                    if df_yolo_fil[(df_yolo_fil['timestamp'] >= st_time_local) & (df_yolo_fil['timestamp'] <= ed_time_local)].shape[0] > 0:
+                        out_lkj.append(item) # 取LKJ关联数据最后一行
+                        #out_lkj.append(row_select) # 取LKJ关联数据最开始一行
     return df_lkj.loc[out_lkj,out_col].values.tolist()
 

@@ -97,6 +97,7 @@ def get_driver_coord(pose_keypoints_arr, box_data):
         for i in range(num_plp_tot):
             x,y,c = pose_keypoints_arr[i][1]    # neck coordinate is used for check
             # neck coordinate in the coordiate range box
+            # print(x, box_data)
             if x > box_data[0] and x < box_data[1] and y > box_data[2] and y < box_data[3]:
                 min_idex = i
                 plp_cnt += 1

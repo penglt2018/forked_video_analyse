@@ -60,7 +60,7 @@ def init(log_name):
             common.close_db(mysql_db, 'mysql')
         return False
 
-def video_size_check(video_file):
+def video_size_check(video_file,video_id,video_source):
     ''' Function for checking video file size
         Input:
                 video_file: local mp4 or avi file
@@ -74,6 +74,7 @@ def video_size_check(video_file):
     if int(size/(1024*1024)) == 0:
         main_logger.warning('Video {0} size is too small {1}'.format(video_file, size))
         update_video(video_id, video_source)
+        os.remove(video_file)
 
 def http_download(url, local_file):
     ''' Function for downloading a file via http request
@@ -96,7 +97,7 @@ def http_download(url, local_file):
 
     return result
 
-def download_video(video_url, local_video_file):
+def download_video(video_url, local_video_file,video_id,video_source):
     ''' Function for downloading video file to local
         input: 
                 video_url:  url of a video file on server side
@@ -112,7 +113,7 @@ def download_video(video_url, local_video_file):
     else:
         main_logger.info(download_rt[1])
         # check local video file size after download
-        video_size_check(local_video_file)
+        video_size_check(local_video_file,video_id,video_source)
         
 def check_qry_rt(qry_list):
     global main_logger
@@ -266,10 +267,11 @@ def get_video_channel(lkj_local_file, lkj_id, video_st_tm):
         if lkj_data.shape[0] == 0 or lkj_data.shape[1] != 2:
             main_logger.warning('LKJ shape not correct after filter, shape: {0}'.format(lkj_data.shape))
             main_logger.info('Updating LKJ table in Oracle database')
-            if common.update_lkj_table(lkj_id) == True:
+            if common.update_lkj_table(lkj_id, oracle_db) == True:
                 main_logger.info('LKJ table updated successfully')
             else:
                 main_logger.error('LKJ table updated failed')
+            return False
         else:
             # find video start time = the time of the event of '鸣笛开始' and '鸣笛结束'
             # then video channel = the value of '其他' related the event of '鸣笛开始' and '鸣笛结束'
@@ -391,7 +393,7 @@ def download_file(video_list):
                             # set video file in local for downloading via http
                             video_file = dir_name + os_sep + video_fname
                             if video_channel in video_file: # only download channel matched video file
-                                download_video(video_url, video_file)
+                                download_video(video_url, video_file, video_id,video_source)
                             else:
                                 main_logger.warning('LKJ channel {0} does NOT match video file {1}'.format(video_channel, video_file))
                                 update_video(video_id, video_source)
