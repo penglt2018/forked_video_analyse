@@ -11,52 +11,167 @@ Example: N/A
 Program Message: N/A
 Remarks: N/A
 Amendment Hisotry:
-			Version:
-			Date:
-			Programmer:
-			Reason:
+            Version:
+            Date:
+            Programmer:
+            Reason:
 '''
 import os
 os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.utf8'
-import src.common as common
-import traceback
+import lib.common as common
+import lib.video_handler as video_handler
+import yolo
+
+os_sep = os.path.sep
+video_path='./video'       # set download path
+
+def init(log_name):
+    ''' Function for initializing main logger,
+        databse connector objects, darknet network, and temp file
+        Input: 
+                log name
+        Return: 
+                return True if all global variables are generated successfully,
+                otherwise return False
+    '''
+    global main_logger, oracle_db, mysql_db
+    main_logger = False
+    oracle_db = False
+    mysql_db = False
+    main_logger = common.get_logger(log_name)
+    
+    # initialize darknet
+    yolo.init()
+    
+    # connect to Mysql database
+    main_logger.info('Connecting to Mysql database')
+    mysql_conn_rt = common.connect_db('mysql')
+    if mysql_conn_rt[0] == False:
+        main_logger.error(mysql_conn_rt[1])
+    else:
+        main_logger.info(mysql_conn_rt[1])
+        mysql_db = mysql_conn_rt[2] 
+
+    # create a temp file to record image filenames
+    # which needs to be saved
+    # save_tmp=open('tmp/pict.sav', 'a+')
+    # common.file_check(save_tmp, main_logger, 'Temp file tmp/pict.sav create failed!', 10)
+    # main_logger.info('temp file {0} generate successfully'.format(save_tmp))
+
+    #if main_logger != False and oracle_db != False and mysql_db != False:
+    if main_logger != False and mysql_db != False:
+        main_logger.info('Initializting process successfully')
+        return True
+    else:
+        main_logger.error('Initializting process Failed!')
+        if oracle_db != False:
+            common.close_db(oracle_db, 'oracle')
+        if mysql_db != False:
+            common.close_db(mysql_db, 'mysql')
+        return False
+    
+def run_yolo(video_obj, video_info, lkj_file):
+    ''' Function for executing yolo
+        Input:
+                video_obj:  custom video object
+                video_info: video related information
+                lkj_file:   LKJ file with path
+        return:
+                None
+    '''
+    global main_logger, mysql_db
+    yolo_result = []
+    video_name = video_info[3]
+    frame_mat = video_obj.get_video_frames()
+    fps = video_obj.get_video_fps
+
+    if frame_mat == [] or frame_mat == [[]]:
+        main_logger.warning('Empty frame from video {0}'.format(video_name))
+    else:
+        # execute yolo to predict labels into yolo_result list
+        yolo_rt_flag = yolo.exe_yolo(frame_mat, yolo_result, video_info, fps)
+        if yolo_rt_flag == False:
+            main_logger.error('YOLO execute failed to video {0}'.format(video_name))
+        else:
+            main_logger.info('YOLO execute successfully to video {0}'.format(video_name))
+
+            # correlate lkj data and yolo result for violate judgment
+            main_logger.info('Executing LKJ and yolo result correlation')
+            match_rt, final_result = yolo.match_lkj(lkj_file, video_info, yolo_result)
+            if match_rt != 0:
+                main_logger.error('LKJ and yolo result correlation contains some errors, please check yolo.log')
+            else:
+                main_logger.info('LKJ and yolo result correlation successfully')
+                store_rt_flag = yolo.store_result(final_result, video_info, mysql_db, video_obj)
+                if store_rt_flag == False:
+                    main_logger.error('Violation result of video {0} stored contains some errors, please refer to yolo log for further details'.format(video_name))
+                else:
+                    main_logger.info('Violation result of video {0} stored successfully'.format(video_name))       
+
+# def run_openpose(video_obj, video_info, lkj_file):
+#     '''
+#     '''
+#     global main_logger, mysql_db
+#     yolo_result = []
+#     video_name = video_info[3]
+#     frame_mat = video_obj.get_video_frames()
+#     fps = video_obj.get_video_fps()
+
+#     if frame_mat == [] or frame_mat == [[]]:
+#         main_logger.warning('Empty frame from video {0}'.format(video_name))
+#     else:
+#         # execute yolo to predict labels into yolo_result list
+#         openpose.forward(img, True)
+#         #yolo_rt_flag = yolo.exe(frame_mat, yolo_result, video_info, fps)
+
+def start():
+    global main_logger, video_path, mysql_db
+    main_logger.info('Walking through path under video path {0}'.format(video_path))
+    for root,dirs,files in os.walk(video_path):
+        for item in files:
+            # check video file name
+            video_file = root + os_sep + item
+            if common.video_fname_check(video_file) == True:
+                # retrieve video information from mysql db
+                main_logger.info('Retrieving video {0} related information'.format(item))
+                video_info_rt = common.get_video_info(os.path.splitext(item)[0], mysql_db)
+
+                if video_info_rt[0] == False:
+                    main_logger.error(video_info_rt[1])
+                else:
+                    video_info = video_info_rt[2]
+                    main_logger.info(video_info_rt[1])
+                    
+                    # fetch related lkj file
+                    lkj_file = video_info[0]
+                    if not os.path.isfile(lkj_file):
+                        main_logger.error('LKJ file {0} does not exist'.format(lkj_file))
+                    else:
+                        video_ini_flag = False
+                        main_logger.info('Generating object for video {0}'.format(video_file))
+                        try:
+                            video_obj = video_handler.VideoHandler(video_file)
+                            main_logger.info('Extracting frames from video {0}'.format(video_file))
+                            video_obj.set_video_frames(skip_step=4, bilateralFlg = True)
+                            video_ini_flag = True
+                            main_logger.info('Frames extraction from video {0} successfully'.format(video_file))
+                        except Exception:
+                            main_logger.error('Frames extraction from video {0} error'.format(video_file), exc_info=True)
+                            video_ini_flag = False
+                        
+
+
+                        # parallel computing
+                        if video_ini_flag == True:
+                            run_yolo(video_obj, video_info, lkj_file)
+
+                            #run_openpose(video_obj, video_info, lkj_file)
+
+
+
+           
 
 if __name__ == '__main__':
-	cfg = common.get_config('config.ini')
-	main_logger = common.get_logger('video_to_frame','logconfig.ini', True)
-	main_logger.info('function main: video_to_frame.py execute begin')
-	# get paths
-	video_path=cfg.get('path', 'video_path')
-	common.path_check(video_path, main_logger, 'Video path NOT set!', 8)
-	main_logger.info('function main: video path {0} get successfully'.format(video_path))
-	frame_path=cfg.get('path', 'frame_path')
-	common.path_check(frame_path, main_logger, 'Fram path NOT set!', 9)
-	main_logger.info('function main: frame path {0} get successfully'.format(frame_path))
-
-	''' find all videos under a path and convert them into frames '''
-	import src.video_handler as video_handler
-	main_logger.info('function main: src.video_handler import successfully')
-	#main_logger.info('Frame extraction start...')
-	for root,dirs,files in os.walk(video_path):
-		for item in files:
-			if common.video_fname_check(item, main_logger):
-				print('processing video {0}'.format(root + os.path.sep + item))
-				for lkj_file in os.listdir(root):
-					if lkj_file.endswith('.csv'):
-						main_logger.info('function main: reading lkj data {0}/{1}'.format(root, lkj_file))
-						lkj_result = common.get_lkj(root, lkj_file)
-						if lkj_result[0] == False:
-							main_logger.error(lkj_result[1])
-						else:
-							lkj_data = lkj_result[1]
-							main_logger.info('function main: lkj data read successfully')
-							item_dir_name = root.split(os.path.sep)[-2] + os.path.sep + root.split(os.path.sep)[-1] + os.path.sep + os.path.splitext(item)[0]
-							main_logger.info('function main: loading video {0}'.format(root + os.path.sep + item))
-							item_video = video_handler.VideoHandler(root + os.path.sep + item)
-							eve_tm_list = list(lkj_data[lkj_data['事件']=='出站']['时间'])
-							try:
-								item_video.write_frame(frame_path + item_dir_name, skip_step=4, time_list=eve_tm_list)
-							except Exception as e:
-								main_logger.error('function main: item_video.write_fame error: {0}'.format(traceback.format_exc()))
-	main_logger.info('function main: execute finish')
-									
+    init('run_model')
+    start()
+                                    

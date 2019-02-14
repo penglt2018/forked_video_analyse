@@ -9,153 +9,85 @@ Functions of database operations
 import sys 
 import os
 os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.UTF8'  #或者os.environ['NLS_LANG'] = 'AMERICAN_AMERICA.AL32UTF8'
-import src.common as common
-import src.ftp_client as ftp_client
-import src.time_check as time_check
-from requests import get  # to make GET request
+import lib.common as common
+import lib.lkj_lib as LKJLIB
+import lib.ftp_client as ftp_client
+from requests import get    # to make GET request
 import traceback
 os_sep = os.path.sep
-
+video_path='./video'        # set download path
 
 def init(log_name):
-    ''' initialization process including config parameters and logger fetch
-        input: model log name
-        return: config and loggers objects
+    ''' Function for initializing main logger and
+        databse connector objects
+        Input: 
+                log name
+        Return: 
+                return True if all global variables are generated successfully,
+                otherwise return False
     '''
     print('get_video initializing')
-    cfg = common.get_config('config.ini')
-    main_logger = common.get_logger(log_name, 'logconfig.ini', True)
-    oracle_logger = common.get_logger('oracle', 'logconfig.ini', False)
-    mysql_logger = common.get_logger('mysql', 'logconfig.ini', False)
-    return cfg, main_logger, oracle_logger, mysql_logger
+    global main_logger, oracle_db, mysql_db
+    main_logger = False
+    oracle_db = False
+    mysql_db = False
+    main_logger = common.get_logger(log_name)
 
-def update_video_table(video_id, video_source):
-    global oracle_logger, oracle_db
-    oracle_logger.info('function update_video_table: updating video table begin')
-    sql = "update lkjvideoadmin.LAVDR set ISANALYZED = 1 where id = \'{0}\' and DATASOURCE = \'{1}\'".format(video_id, video_source)
-    #sql = "update lkjvideoadmin.LAVDR set ISANALYZED = 1 where filename = \'http://10.196.205.47/{0}.mp4\'".format(video_name)
-    oracle_logger.info('function update_video_table: executing update sql: {0}'.format(sql))
-    try:
-        oracle_db.Exec(sql)
-        oracle_logger.info('function update_video_table: update sql execute successfully')
-    except Exception as e:
-        oracle_logger.error('function update_video_table: update sql execute failed: {0}'.format(traceback.format_exc()))
-        return False
-    return True
-
-def update_lkj_table(lkj_id):
-    global oracle_logger, oracle_db
-    oracle_logger.info('function update_lkj_table: updating lkj table begin')
-    sql = "update lkjvideoadmin.lkjvideoproblem set ISANALYZED = 1 where lkjid = \'{0}\'".format(lkj_id)
-    #sql = "update lkjvideoadmin.LAVDR set ISANALYZED = 1 where filename = \'http://10.196.205.47/{0}.mp4\'".format(video_name)
-    oracle_logger.info('function update_lkj_table: executing update sql: {0}'.format(sql))
-    try:
-        oracle_db.Exec(sql)
-        oracle_logger.info('function update_lkj_table: update sql execute successfully')
-    except Exception as e:
-        oracle_logger.error('function update_lkj_table: update sql execute failed: {0}'.format(traceback.format_exc()))
-        return False
-    return True
-
-def get_video_list():
-    ''' connect to database and fetch required lkj and video files
-        input: null
-        return: a 2D list or False if errors occur
-    '''
-    global oracle_logger, main_logger
-    main_logger.info('function get_video_list: execute begin')
-    main_logger.info('function get_video_list: connecting to Oracle database')
-    db = common.connect_db(cfg, oracle_logger, 'oracle')
-    video_list = []
-    if db == False:
-        main_logger.error('function get_video_list: Oracle database connecting failed')
-        return False, False
+    main_logger.info('Connecting to Oracle database')
+    oracle_conn_rt = common.connect_db('oracle')    # conn_rt = [ True/False, log_info, database object ]
+    if oracle_conn_rt[0] == False:
+        main_logger.error(oracle_conn_rt[1])
     else:
-        main_logger.info('function get_video_list: Oracle database connect successfully')
-        #video_list = [[]]
-        # sql = 'select lkj.JICHEXINGHAO, lkj.JCH, lkj.TRACE, lkj.lkjwholecourse,\
-        #         video.FILEPATH, video.STARTTIME, video.ENDTIME, video.CHNO, video.DRIVERNO, video.DRIVER2NO\
-        #         from lkjvideoadmin.lkjvideoproblem lkj\
-        #         inner join LAVDR video on lkj.LKJID = video.LKJID\
-        #         where lkj.videoneedanaly > lkj.videoanalyzed and lkj.lkjwholecourse is not null and video.ISANALYZED = 0'
-        #lkj_data, lkj_st_tm, lkj_ed_tm, video_url, video_st_tm, video_ed_tm, train_type, train_num, port, shift_num
-        sql="""select lkj.lkjwholecourse, to_char(lkj.starttime, 'yyyymmddhh24miss') as lkj_st_tm, to_char(lkj.endtime, 'yyyymmddhh24miss') as lkj_ed_tm,
-                video.FILEPATH, to_char(video.STARTTIME, 'yyyy-mm-dd hh24:mi:ss') as video_st_tm, to_char(video.ENDTIME,'yyyy-mm-dd hh24:mi:ss') as video_ed_tm, lkj.JICHEXINGHAO, lkj.JCH, video.CHNO, lkj.TRACE, video.DRIVERNO, video.DRIVER2NO,lkj.lkjid,                 video.ID, video.DATASOURCE 
-                from lkjvideoadmin.lkjvideoproblem lkj 
-                inner join LAVDR video 
-                on lkj.locotypeno = video.TRAINNO 
-                where (lkj.JCH='826' or lkj.JCH='827' or lkj.JCH='6110' or lkj.JCH='6167' or lkj.JCH='6169') and lkj.JICHEXINGHAO = 'HXD1C' 
-                and lkj.videoneedanaly > lkj.videoanalyzed and lkj.lkjwholecourse is not null
-                and not (video.STARTTIME <= lkj.STARTTIME or video.ENDTIME >= lkj.ENDTIME)
-                and video.ISANALYZED = 0
-		and (video.CHNO=2 or video.CHNO=10) 
-                and lkj.starttime is not null and lkj.endtime is not null and video.FILEPATH is not null and video.STARTTIME is not null and video.ENDTIME is not null and lkj.JICHEXINGHAO is not null and lkj.JCH is not null 
-and video.CHNO is not null and lkj.TRACE is not null and video.DRIVERNO is not null and lkj.lkjid is not null and video.ID is not null and video.DATASOURCE is not null 
-                and rownum<=500 and video.filepath like '%HXD1C6167_成都运达_02_一端司机室_20180923_101500%'
-                """
-        #and cast(to_char(video.STARTTIME, 'hh24') as int) between 7 and 18
-        #and to_char(lkj.starttime, 'yyyymmddhh24miss') like '201809%' and video.filepath like '%HXD1C0002_株洲所_02_一端司机室_20180906_211501%'
-        #and (lkj.TRACE = '51454')"
-                #and video.FILEPATH like '10.195.32.229%'
-        main_logger.info('function get_video_list: fetching video list')
-        oracle_logger.info('function get_video_list: executing query sql: {0}'.format(sql))
-        try:
-            video_list = db.Query(sql)
-            oracle_logger.info('function get_video_list: query sql executing successfully')
-        except Exception as e:
-            video_list = False
-            oracle_logger.error('function get_video_list: query sql executing failed: {0}'.format(traceback.format_exc()))
+        main_logger.info(oracle_conn_rt[1])
+        oracle_db = oracle_conn_rt[2]
 
-    if video_list == False:
-        main_logger.error('function get_video_list: video_list fetch failed')
-    if video_list == []:
-        main_logger.warning('function get_video_list: video_list is empty, no required video')
-    main_logger.info('function get_video_list: execute finish')
-    return video_list, db
+    main_logger.info('Connecting to Mysql database')
+    mysql_conn_rt = common.connect_db('mysql')
+    if mysql_conn_rt[0] == False:
+        main_logger.error(mysql_conn_rt[1])
+    else:
+        main_logger.info(mysql_conn_rt[1])
+        mysql_db = mysql_conn_rt[2] 
 
-    #[lkj_file, video_file, video_st_tm, video_ed_tm, train_type, train_num, port, shift_num] 
-
-def get_video_list_test():
-    return [['/0506/012784.csv','20180101000000', '20180101010000', 'http://192.168.1.6/HXD11514B_成都运达_02_B节司机室_20171121_14300.mp4', '2018-01-01 00:00:00', '2018-01-01 00:15:00', 'HXD1', '0001A', 2, '2018-0001']]
-
-# def get_ftp(cfg):
-#     ''' get ftp connection info
-#         input: configure file
-#         return: host, port
-#     '''
-    
-#     return host, port, uname, pwd
-
-def conn_ftp(cfg):
-    global main_logger
-    main_logger.info('function conn_ftp: ftp connecting begin')
-    ftp_host = cfg.get('ftp', 'host')
-    ftp_port = cfg.get('ftp', 'port')
-    ftp_uname = cfg.get('ftp', 'username')
-    ftp_pwd = cfg.get('ftp', 'password')
-
-    # connect to ftp server
-    #ftp_host, ftp_port, ftp_uname, ftp_pwd = get_ftp(cfg)
-    main_logger.info('function conn_ftp: Conneting to ftp server: {0}'.format([ftp_host,int(ftp_port), ftp_uname, ftp_pwd]))
-    ftp_conn = ftp_client.getConnect(ftp_host, int(ftp_port), ftp_uname, ftp_pwd)
-    if ftp_conn[0] == False: # ftp failed
-        main_logger.error(ftp_conn[1])
+    if main_logger != False and oracle_db != False and mysql_db != False:
+        main_logger.info('Initializting process successfully')
+        return True
+    else:
+        main_logger.error('Initializting process Failed!')
+        if oracle_db != False:
+            common.close_db(oracle_db, 'oracle')
+        if mysql_db != False:
+            common.close_db(mysql_db, 'mysql')
         return False
-    else:   # ftp success
-        main_logger.info(ftp_conn[1])
-        main_logger.info('function conn_ftp: ftp connecting finish')
-        return ftp_conn[2]
 
+def video_size_check(video_file,video_id,video_source):
+    ''' Function for checking video file size
+        Input:
+                video_file: local mp4 or avi file
+        return:
+                None
+    '''
+    global main_logger
+    # if video file size is too small,
+    # update video table
+    size = os.path.getsize(video_file)
+    if int(size/(1024*1024)) == 0:
+        main_logger.warning('Video {0} size is too small {1}'.format(video_file, size))
+        update_video(video_id, video_source)
+        os.remove(video_file)
 
-def http_download(url, file_name):
-    ''' download a file via http request
-        input: url and output filename on local
-        return: None
+def http_download(url, local_file):
+    ''' Function for downloading a file via http request
+        input: 
+                url:        url of the file on server side
+                local_file: target file on local side
+        return: 
+                result:     [ True/False, log info ]
     '''
     from requests import get  # to make GET request
     # open in binary mode
     try:
-        with open(file_name, "wb") as f:
+        with open(local_file, "wb") as f:
             # get request
             response = get(url)
             f.write(response.content)
@@ -165,277 +97,320 @@ def http_download(url, file_name):
 
     return result
 
-def store_video_info(db, info_list):
-    global mysql_logger
-    mysql_logger.info('function store_video_info: store video info execute begin')
-    lkj_data, lkj_st_tm, lkj_ed_tm, video_file, video_st_tm, video_ed_tm, train_type, train_num, port, shift_num, driver_1, driver_2,lkj_id, video_id, video_source,video_url = info_list
-    sql = "insert into violate_result.video_info values (\'{0}\',\'{1}\',\'{2}\',\'{3}\',\'{4}\',\'{5}\',\'{6}\',\'{7}\',{8},\'{9}\', \'{10}\', \'{11}\', \'{12}\')"\
-    .format(lkj_data, lkj_st_tm, lkj_ed_tm, os.path.splitext(video_file)[0], video_st_tm, video_ed_tm, train_type, train_num, int(port), shift_num, driver_1, lkj_id, video_url)
-    mysql_logger.info('function store_video_info: executing insert sql: {0}'.format(sql))
-    try:
-        db.Insert(sql)
-        mysql_logger.info('function store_video_info: insert sql execute successfully')
-    except Exception as e:
-        mysql_logger.error('function store_video_info: insert sql execute failed: {0}'.format(traceback.format_exc()))
-        return False
-    return True
-
+def download_video(video_url, local_video_file,video_id,video_source):
+    ''' Function for downloading video file to local
+        input: 
+                video_url:  url of a video file on server side
+                local_video_file: target video file on local side
+        return: 
+                None
+    '''
+    global main_logger
+    main_logger.info('Downloading video file {0} to {1}'.format(video_url, local_video_file))
+    download_rt = http_download(video_url.replace('192.168.1.22', '10.183.217.228'), local_video_file)
+    if download_rt[0] == False:
+        main_logger.error(download_rt[1])
+    else:
+        main_logger.info(download_rt[1])
+        # check local video file size after download
+        video_size_check(local_video_file,video_id,video_source)
+        
 def check_qry_rt(qry_list):
     global main_logger
-    main_logger.info('function check_qry_rt: checking video info begin')
-    lkj_data, lkj_st_tm, lkj_ed_tm, video_url, video_st_tm, video_ed_tm, train_type, train_num, port, shift_num, driver_1, driver_2, lkj_id, video_id, video_source = qry_list
+    main_logger.info('Checking video information')
+    # resolve video information list
+    lkj_file, lkj_st_tm, lkj_ed_tm, video_url, video_st_tm, video_ed_tm,\
+    train_type, train_num, channel, trace, driver_1, driver_2,\
+    lkj_id, video_id, video_source = qry_list
+
+    # generate 2 flags for lkj and video checking mechanism independently
+    # False for normal case and True for abnormal case
     lkj_update_flg = False
     video_update_flg = False
 
-    main_logger.info('function check_qry_rt: checking lkj_data suffix')
-    if not lkj_data.endswith('csv'):
+    main_logger.info('Checking LKJ file suffix')
+    if not lkj_file.endswith('csv'):
         lkj_update_flg = True
-        main_logger.error('function check_qry_rt: lkj_data format error: {0}'.format(lkj_data))
+        main_logger.warning('LKJ file format error: {0}'.format(lkj_file))
 
-    main_logger.info('function check_qry_rt: checking lkj_st_tm')
+    main_logger.info('checking LKJ start time')
     if not lkj_st_tm or len(lkj_st_tm) != 14 or common.isnum(lkj_st_tm) == False:
         lkj_update_flg = True
-        main_logger.error('function check_qry_rt: lkj_st_tm format error: {0}'.format(lkj_st_tm))
+        main_logger.warning('LKJ start time format error: {0}'.format(lkj_st_tm))
 
-    main_logger.info('function check_qry_rt: checking lkj_ed_tm')
+    main_logger.info('Checking LKJ end time')
     if not lkj_ed_tm or len(lkj_ed_tm) != 14 or common.isnum(lkj_ed_tm) == False:
         lkj_update_flg = True
-        main_logger.error('function check_qry_rt: lkj_ed_tm format error: {0}'.format(lkj_ed_tm))
+        main_logger.warning('lkj_ed_tm format error: {0}'.format(lkj_ed_tm))
 
-    main_logger.info('function check_qry_rt: checking video_url')
+    main_logger.info('Checking video_url')
     if not video_url.endswith('.mp4') or video_url.endswith('.avi') or len(video_url.split('/')) != 4:
         video_update_flg = True
-        main_logger.error('function check_qry_rt: video_url format error: {0}'.format(video_url))
+        main_logger.warning('video_url format error: {0}'.format(video_url))
 
-    main_logger.info('function check_qry_rt: checking video_st_tm')
+    main_logger.info('Checking video start time')
     if common.is_valid_time(video_st_tm) == False:
         video_update_flg = True
-        main_logger.error('function check_qry_rt: video_st_tm format error: {0}'.format(video_st_tm))
+        main_logger.warning('Video start time format error: {0}'.format(video_st_tm))
 
-    main_logger.info('function check_qry_rt: checking train_type')
+    main_logger.info('Checking train type')
     if not train_type:
         video_update_flg = True
-        main_logger.error('function check_qry_rt: train_type format error: {0}'.format(train_type))
+        main_logger.warning('Train_type format error: {0}'.format(train_type))
 
-    main_logger.info('function check_qry_rt: checking train_num')
+    main_logger.info('Checking train number')
     if not str(train_num):
         video_update_flg = True
-        main_logger.error('function check_qry_rt: train_num format error: {0}'.format(train_num))
+        main_logger.warning('Train number format error: {0}'.format(train_num))
 
-    main_logger.info('function check_qry_rt: checking port')
-    if not str(port):
+    main_logger.info('Checking channel number')
+    if not str(channel):
         video_update_flg = True
-        main_logger.error('function check_qry_rt: port format error: {0}'.format(port))
+        main_logger.warning('Channel number format error: {0}'.format(channel))
 
-    main_logger.info('function check_qry_rt: checking shift_num')
-    if not str(shift_num):
+    main_logger.info('Checking trace number')
+    if not str(trace):
         video_update_flg = True
-        main_logger.error('function check_qry_rt: shift_num format error: {0}'.format(shift_num))
+        main_logger.warning('Trace number format error: {0}'.format(trace))
 
-    main_logger.info('function check_qry_rt: checking driver_1')
+    main_logger.info('Checking driver_1 id')
     if not str(driver_1):
         video_update_flg = True
-        main_logger.error('function check_qry_rt: driver_1 format error: {0}'.format(driver_1))
+        main_logger.warning('Driver_1 id format error: {0}'.format(driver_1))
+
+    main_logger.info('Checking driver_2 id')
+    if not str(driver_2):
+        video_update_flg = True
+        main_logger.warning('Driver_2 id format error: {0}'.format(driver_2))
     
     if lkj_update_flg == False and video_update_flg == False:
-        main_logger.info('function check_qry_rt: checking video info finish')
+        main_logger.info('Checking video info finish')
         return [True, qry_list]
     else:
-        main_logger.warning('function check_qry_rt: check_qry_rt video info not passed')
+        main_logger.warning('Checking video info NOT passed')
         if lkj_update_flg == True:
-            main_logger.info('function check_qry_rt: update lkj table with lkj_id {0} execute begin'.format(lkj_id))
-            if update_lkj_table(lkj_id) == True:
-                main_logger.info('function check_qry_rt: update lkj table successfully')
-            else:
-                main_logger.error('function check_qry_rt: update lkj table failed')
-
+            update_lkj(lkj_id)
         if video_update_flg == True:
-            main_logger.info('function check_qry_rt: update video table {0} with video_id {1} execute begin'.format(video_file, video_id))
-            if update_video_table(video_id, video_source) == True:
-                main_logger.info('function check_qry_rt: update video table {0} successfully'.format(video_file))
-            else:
-                main_logger.error('function check_qry_rt: update video table {0} failed'.format(video_file))    
+            update_video(video_id, video_source)  
         return [False, qry_list]
+
+def update_lkj(lkj_id):
+    global main_logger, oracle_db
+    main_logger.info('Updating LKJ table with lkj_id {0}'.format(lkj_id))
+    if common.update_lkj_table(lkj_id, oracle_db) == True:
+        main_logger.info('LKJ table update successfully')
+    else:
+        main_logger.error('LKJ table update failed!')
+
+def update_video(video_id, video_source):
+    global main_logger,oracle_db
+    main_logger.info('Updating video table with video_id {0} and source {1}'.format(video_id,video_source))
+    if common.update_video_table(video_id, video_source, oracle_db) == True:
+        main_logger.info('Video table update successfully')
+    else:
+        main_logger.error('Video table update failed')    
+ 
+def get_video_list():
+    ''' Function which is used to connect to oracle database
+        and fetch required lkj and video file information
+        such as location, id, time, etc.
+
+        input: 
+                None
+        return: 
+                video_list: A 2D list containing a set of video info 
+                            with corresponding lkj info when success,
+                            otherwise return "False"
+    '''
+    global main_logger, oracle_db
+    main_logger.info('Execute begin')
+    # read sql from config/fetch.sql file
+    with open('config/fetch.sql', 'r') as sql_f:
+        sql = sql_f.read().replace('\n', ' ')
+
+    main_logger.info('Fetching video list')
+    video_list = common.query_sql(oracle_db, 'oracle', sql)
+
+    if video_list == False:
+        main_logger.error('Video list fetching process failed')
+    elif video_list == []:
+        main_logger.warning('Video list is empty, no required video')
+    else:
+        main_logger.info('Video list fetch successfully')
+    main_logger.info('Execute finish')
+    return video_list
     
-    
+def get_video_channel(lkj_local_file, lkj_id, video_st_tm):
+    ''' Function for reading lkj file and get the channel info
+        Input:
+                lkj_local_file: lkj file name with path
+                lkj_id:         primary key of the lkj in lkjvideoproblem
+                                table in Oracle database
+                video_st_tm:    video start time
+        return:
+                lkj_channel: channel info in lkj data
+    '''
+    # begin channel check mechanism
+    main_logger.info('Reading lkj file {0}'.format(lkj_local_file))
+    lkj_rd_rt = common.get_lkj(lkj_local_file)
+    if lkj_rd_rt[0] == False:
+        main_logger.error(lkj_rd_rt[1])
+    else:
+        main_logger.info(lkj_rd_rt[1])
+        lkj_data = lkj_rd_rt[2]
+        main_logger.info('Filtering lkj data')
+        # the value of '其他' related the event of '鸣笛开始' and '鸣笛结束'
+        # is used for channel determination
+        lkj_data=lkj_data[(lkj_data['事件']== '鸣笛开始') | (lkj_data['事件']== '鸣笛结束')][['时间', '其他']].drop_duplicates()
+        print("lkj shape before filter: {0}".format(lkj_data.shape))
+        print("lkj shape after filter: {0}".format(lkj_data.shape))
+        if lkj_data.shape[0] == 0 or lkj_data.shape[1] != 2:
+            main_logger.warning('LKJ shape not correct after filter, shape: {0}'.format(lkj_data.shape))
+            main_logger.info('Updating LKJ table in Oracle database')
+            if common.update_lkj_table(lkj_id, oracle_db) == True:
+                main_logger.info('LKJ table updated successfully')
+            else:
+                main_logger.error('LKJ table updated failed')
+            return False
+        else:
+            # find video start time = the time of the event of '鸣笛开始' and '鸣笛结束'
+            # then video channel = the value of '其他' related the event of '鸣笛开始' and '鸣笛结束'
+            try:
+                lkj_channel = LKJLIB.channel_filter(lkj_data, video_st_tm, 5)
+                main_logger.info('Channel get successfully')
+                return lkj_channel
+            except Exception as e:
+                main_logger.error('Channel get failed', exc_info=True)
+                return False
 
 def download_file(video_list):
-    ''' given a list containing video and lkj info
-        download required lkj and video files to corresponding
-        folders
-        input: a 2D list or False if errors occur
-        output: None
+    ''' Function for downloading lkj and video files to specific paths
+        given a list containing video and lkj infor
+        input: 
+                video_list: a 2D list or False if errors occur
+        return: 
+                True or False for evaluate downloading process
     '''
-    global cfg, main_logger, mysql_logger
-    main_logger.info('function download_file: execute begin')
+    global main_logger, mysql_db
+    main_logger.info('Download program execute begin')
+    main_logger.info('Checking video path')
+    
+    if not os.path.isdir(video_path):
+        main_logger.warning('Video path does not exist, creating path {0}'.format(video_path))
+        os.makedirs(video_path)
+    main_logger.info('Video path {0} is ready'.format(video_path))
 
-    # get paths
-    video_path=cfg.get('path', 'video_path')
-    program_path = cfg.get('path', 'program_path')
-    common.path_check(video_path, main_logger, 'Video path NOT set!', 8)
-    main_logger.info('function download_file: video_path {0} get successfully'.format(video_path))
-    common.path_check(program_path, main_logger, 'Program path NOT set!', 8)
-    main_logger.info('function download_file: program_path {0} get successfully'.format(program_path))
+    # connecting to ftp server for downloading lkj file
+    main_logger.info('Connecting to ftp server')
+    ftp_con = common.conn_ftp()
+    if ftp_con == False:
+        main_logger.error('ftp server connecting failed!')
+        return False
+    else:
+        main_logger.info('Ftp server connecting successfully')
+        main_logger.info('Looping video list')
+        # for each video file
+        for v in video_list:
+            v = list(v)
+            print(v)
+            main_logger.info('processing {0}'.format(v))
+            # check video information fetched from oracle database
+            ck_rt = check_qry_rt(v) # ck_rt = [ True/False, video_info ]
+            if ck_rt[0] == True:
+                # resolve video infor
+                lkj_file, lkj_st_tm, lkj_ed_tm,\
+                video_url, video_st_tm, video_ed_tm,\
+                train_type, train_num, channel, trace, driver_1, driver_2,\
+                lkj_id, video_id, video_source = ck_rt[1]
 
-    # connect to mysql database
-    main_logger.info('function download_file: connecting to Mysql database')
-    db = common.connect_db(cfg, mysql_logger, 'mysql')
-    if db == False:
-        main_logger.error('function download_file: Mysql database connect failed')
-        return 
-    else: 
-        main_logger.info('function download_file: Mysql database connect successfully')
-        ftp = conn_ftp(cfg)
-        if ftp != False:
-            for v in video_list:
-                v = list(v)
-                print(v)
-                main_logger.info('function download_file: processing video info {0}'.format(v))
-                ck_rt = check_qry_rt(v)
-                if ck_rt[0] == True:
-                    lkj_data, lkj_st_tm, lkj_ed_tm, video_url, video_st_tm, video_ed_tm, train_type, train_num, port, shift_num, driver_1, driver_2, lkj_id, video_id, video_source = ck_rt[1]
-                    # if len(train_num) < 4 :
-                    #     for _ in range(len(train_num), 4): train_num='0'+train_num
-                    main_logger.info('function download_file: appending original video_url: {0}'.format(video_url))
-                    v.append(video_url)
-                    #print(video_url)
-                    http, _, ip, video_fname = video_url.split('/')
-                    main_logger.info('function download_file: regenerating video_url {0} for download'.format(video_url))
-                    video_url = 'http://' + ip + ':8080/' + 'media/' + video_fname
-                    #video_file = video_url.split['/'][-1]
-                    lkj_fname = lkj_data.split('/')[-1]
-                    main_logger.info('function download_file: update video file name to {0}'.format(video_fname))
-                    v[3] = video_fname
-                    main_logger.info('function download_file: update lkj file name to {0}'.format(lkj_fname))
-                    v[0] = lkj_fname
+                # backup video_url at the end of video info list
+                # for modification usage
+                v.append(video_url) 
+                #print(video_url)
+                
+                # resovle video url
+                http, _, ip, video_fname = video_url.split('/')
+                main_logger.info('Modifying video_url from {0}'.format(video_url))
+                # build correct video_url which is used for further download process
+                video_url = 'http://' + ip + ':8080/' + 'media/' + video_fname
+                main_logger.info('Video url is changed to {0}'.format(video_url))
 
-                    # streo video info
-                    main_logger.info('function download_file: store video info execute begin')
-                    insrt_flag = store_video_info(db, v)
-                    if insrt_flag == False:
-                        main_logger.error('function download_file: store video info execute failed')
-                    else:
-                        dir_name = train_type + '_' + train_num + '_' + str(port) + '_' + shift_num + '_' + lkj_st_tm + '_' + lkj_ed_tm
-                        main_logger.info('function download_file: preparing video store paths')
-                        if train_type == 'HXD1' or train_type == 'HXD1C' or train_type == 'HXN5B':
-                            dir_name = program_path + os_sep + video_path + os_sep + 'right_back/' + dir_name
+                # change v[3] from video url to video filename
+                v[3] = video_fname
+                main_logger.info('Video filename is set to {0}'.format(v[3]))
+                
+                # prepare path for storing video and lkj files
+                dir_name = train_type + '_' + train_num + '_' + str(channel) + '_' + trace + '_' + lkj_st_tm + '_' + lkj_ed_tm
+                # add a camera direction path as prefix
+                if train_type == 'HXD1' or train_type == 'HXD1C' or train_type == 'HXN5B' or train_type == 'HXD2':
+                    dir_name = video_path + os_sep + 'right_back' + os_sep + dir_name
+                else:
+                    # need to add train_type error handling mechanism
+                    break
+                print(dir_name)
+                if not os.path.isdir(dir_name):
+                    os.makedirs(dir_name)
+                    main_logger.info('Path {0} created successfully'.format(dir_name))
+
+                # change v[0] from lkj file path to lkj filename
+                lkj_fname = lkj_file.split('/')[-1] # get lkj filename
+                lkj_local_file = dir_name + os_sep + lkj_fname    
+                v[0] = lkj_local_file
+                main_logger.info('LKJ filename is set to {0}'.format(v[0]))
+
+                # streo video info
+                main_logger.info('Storing video info to table video_info in mysql')
+                insrt_flag = common.store_video_info(mysql_db, v)
+                if insrt_flag == False:
+                    main_logger.error('Video information stored failed')
+                else:
+                    # set lkj file in local for downloading via ftp
+                    ftp_flag = True
+                    if not os.path.isfile(lkj_local_file):
+                        main_logger.info('Downloading lkj file {0} to {1}'.format(lkj_file, lkj_local_file))
+                        ftp_return = ftp_client.downloadFile(ftp_con, lkj_file, dir_name)
+                        # ftp_return = [ 1/-1, log information ]
+                        if ftp_return[0] == 1:
+                            main_logger.info(ftp_return[1])
                         else:
-                            # need to add train_type error handling mechanism
-                            break
-                        print(dir_name)
-                        if not os.path.isdir(dir_name):
-                            main_logger.info('function download_file: creating dir {0}'.format(dir_name))
-                            os.makedirs(dir_name)
-                        lkj_local_file = dir_name + os_sep + lkj_fname
+                            ftp_flag = False
+                            main_logger.error(ftp_return[1])
 
-                        # if lkj file does not exist, download it via ftp
-                        ftp_flag = True
-                        if not os.path.isfile(lkj_local_file):
-                            main_logger.info('function download_file: downloading lkj file {0} to {1}'.format(lkj_data, dir_name))
-                            ftp_return = ftp_client.downloadFile(ftp, lkj_data, dir_name)
-                            if ftp_return[0] == 1:
-                                main_logger.info('function download_file: {0}'.format(ftp_return[1]))
+                    if ftp_flag == True:
+                        video_channel = get_video_channel(lkj_local_file, lkj_id, video_st_tm)
+                        if video_channel == False:
+                            main_logger.error('Video channel get error: lkj: {0}, time:{1}'.format(lkj_local_file, video_st_tm))
+                            update_video(video_id, video_source)
+                        else:
+                            main_logger.info('Filtering video file by video channel')
+                            print(video_channel, video_fname, video_st_tm)
+                            # video_channel get from lkj looks like 'II端'
+                            # while channel in video filename looks like '二端'
+                            # so need to replace II to 二 and I to 一
+                            video_channel = video_channel.replace('II', '二').replace('I', '一').replace('一端', '_02_').replace('二端', '_10_')
+                            print(video_channel)
+                            
+                            # set video file in local for downloading via http
+                            video_file = dir_name + os_sep + video_fname
+                            if video_channel in video_file: # only download channel matched video file
+                                download_video(video_url, video_file, video_id,video_source)
                             else:
-                                ftp_flag = False
-                                main_logger.error('function download_file: {0}'.format(ftp_return[1]))
+                                main_logger.warning('LKJ channel {0} does NOT match video file {1}'.format(video_channel, video_file))
+                                update_video(video_id, video_source)
 
-                        # download video file via http
-                        if ftp_flag:
-                            # get correct duan 
-                            main_logger.info('function download_file: reading lkj data {0}/{1}'.format(dir_name, lkj_fname))
-                            lkj_result = common.get_lkj(dir_name, lkj_fname)
-                            if lkj_result[0] == False:
-                                main_logger.error('function download_file: {0}'.format(lkj_result[1]))
-                            else:
-                                main_logger.info('function download_file: lkj data read successfully')
-                                lkj_data = lkj_result[1]
-                                main_logger.info('function download_file: filtering lkj data')
-                                port_info=lkj_data[(lkj_data['事件']== '鸣笛开始') | (lkj_data['事件']== '鸣笛结束')][['时间', '其他']].drop_duplicates()
-                                print("lkj shape before filter: {0}".format(lkj_data.shape))
-                                print("lkj shape after filter: {0}".format(port_info.shape))
-                                if port_info.shape[0] == 0 or port_info.shape[1] != 2:
-                                    main_logger.warning('function download_file: lkj shape not correct after filter. shape: {0}'.format(port_info.shape))
-                                    if update_lkj_table(lkj_id) == True:
-                                        main_logger.info('function check_qry_rt: update lkj table successfully')
-                                    else:
-                                        main_logger.error('function check_qry_rt: update lkj table failed')
-                                else: 
-                                    main_logger.info('function download_file: fetching video channel in lkj data with time_check.port_filter')
-                                    
-                                    try:
-                                        duan = time_check.port_filter(port_info, video_st_tm, 5)
-                                    except Exception as e:
-                                        main_logger.error('function download_file: time_check.port_filter execute failed {0}'.format(traceback.format_exc()))
-
-                                    if duan == False:
-                                        main_logger.error('function download_file: video channel get error: lkj: {0}, time:{1}'.format(lkj_fname, video_st_tm))
-                                        main_logger.warning('function download_file: updating video table {0} with id {1}'.format(video_file, video_id))
-                                        if update_video_table(video_id, video_source) == True:
-                                            main_logger.info('function download_file: update video table {0} successfully'.format(video_file))
-                                        else:
-                                            main_logger.info('function download_file: update video table {0} failed'.format(video_file))
-                                    else:
-                                        main_logger.info('function download_file: filtering video file by channel')
-                                        print(duan, video_fname, video_st_tm)
-                                        duan = duan.replace('II', '二').replace('I', '一')
-                                        #duan = duan.replace('II端','司机室2').replace('I端','司机室1')
-                                        print(duan)
-                                        #http, _, ip, video_fname = video_url.split('/')
-                                        #video_url = http + '//' + ip + ':8080/' + 'media/' + video_fname
-                                        #video_fname = video_url.split('/')[-1]
-                                        video_file = dir_name + os_sep + video_fname
-                                        if duan in video_file:
-                                            main_logger.info('function download_file: downloading video file {0} to {1}'.format(video_url, video_file))
-                                            http_result = http_download(video_url.replace('192.168.1.22', '10.183.217.228'), video_file)
-                                            if http_result[0] == False:
-                                                main_logger.error('function download_file: {0}'.format(http_result[1]))
-                                            else:
-                                                main_logger.info('function download_file: {0}'.format(http_result[1]))
-                                                if int(os.path.getsize(video_file)/(1024*1024)) == 0:
-                                                    if update_video_table(video_id, video_source) == True:
-                                                        main_logger.info('function download_file: update video table {0} successfully'.format(video_file))
-                                                    else:
-                                                        main_logger.error('function download_file: update video table {0} failed'.format(video_file))
-                                        else:
-                                            main_logger.warning('function download_file: chanel {0} does NOT match video file {1}'.format(duan, video_file))
-                                            if update_video_table(video_id, video_source) == True:
-                                                main_logger.info('function download_file: update video table {0} successfully'.format(video_file))
-                                            else:
-                                                main_logger.error('function download_file: update video table {0} failed'.format(video_file))
-                                            
-        # close db
-        mysql_logger.info('function download_file: closing database')
-        try:
-            db.__del__()
-            mysql_logger.info('function download_file: database close successfully')
-        except Exception as e:
-            mysql_logger.error('function download_file: database close failed {0}'.format(traceback.format_exc()))
-
-    main_logger.info('function download_file: execute finish')
+    main_logger.info('Download program execute finish')
 
 if __name__ == '__main__':
-    cfg, main_logger, oracle_logger, mysql_logger = init('get_video')
-    main_logger.info('function main: execute begin')
-    video_list, oracle_db = get_video_list()
-    if video_list != [] and oracle_db != False:
-        #print(video_list)
-        download_file(video_list)
-
-        # close db
-        oracle_logger.info('function main: closing database')
-        try:
-            oracle_db.__del__()
-            oracle_logger.info('function main: database close successfully')
-        except Exception as e:
-            oracle_logger.error('function main: database close failed {0}'.format(traceback.format_exc()))
-
-    main_logger.info('function main: execute finish')
-    # #video_list = get_video_list_test()
-
-    # if video_list == [[]]:
-    #     main_logger.info('No required video')
-    # else:
-        
-
-    # lkj_file, video_file, video_st_tm, video_ed_tm, train_type, train_num, port, shift_num = test()
-
+    init_flag = init('get_video')
+    if init_flag == True:
+        main_logger.info('Execute start')
+        video_list = get_video_list()
+        if video_list != []:
+            #print(video_list)
+            download_file(video_list)
+        # close database connector
+        common.close_db(oracle_db, 'oracle')
+        common.close_db(mysql_db, 'mysql')
+        main_logger.info('Database connetors close finish')
+    main_logger.info('Execute finish')
+    

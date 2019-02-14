@@ -8,23 +8,25 @@
 import numpy as np
 
 #摄像头安装在右后方
-def wrong_head(x_test):
-    data = x_test[0]
+def wrong_head(data):
+    # data = x_test[0]
     # if data.shape[0]:
     #print(data)
     if (data[45] == -2) :#不止一个人
         return 0
-    elif (data[48] != -1) & (data[45] != -1) & (data[51] != -1) & (data[54] != -1):#全部能看见
+    elif (data[45] == -1 ): # 没有人
+        return 0
+    elif (data[48] != 0) & (data[45] != 0) & (data[51] != 0) & (data[54] != 0):#全部能看见
         return 1
     # elif (data[45] == -1) & (data[42] !=-1)  & (data[48] !=-1) & (data[51] ==-1):#能看见右耳右眼
     #    return 2
-    elif (data[48] != -1) & (data[45] !=-1) & (data[51] !=-1)& (data[54] == -1):#只有左耳看不见（右偏头）& (data[47] >= 0.18)
+    elif (data[48] != 0) & (data[51] > 0.1) & (data[45] != 0) & (data[51] != 0)& (data[54] == 0):#只有左耳看不见（右偏头）& (data[47] >= 0.18)
         return 3
-    elif (data[48] != -1) & (data[45] == -1) & (data[51] == -1) & (data[54] != -1):#能看见左耳左眼
+    elif (data[48] != 0) & (data[45] == 0) & (data[51] == 0) & (data[54] != 0):#能看见左耳左眼
         return 4
-    elif (data[48] == -1) & (data[45] ==-1) & (data[51] ==-1)& (data[54] != -1):#只看见左耳（右偏头）
+    elif (data[48] == 0) & (data[45] == 0) & (data[51] == 0) & (data[54] != 0):#只看见左耳（右偏头）
         return 5
-    elif (data[45] == -1) & (data[48] ==-1) & (data[51] ==-1) & (data[54] ==-1):#全部看不见
+    elif (data[45] == 0) & (data[48] == 0) & (data[51] == 0) & (data[54] == 0):#全部看不见
         return 0
     else:
         return 0
@@ -55,7 +57,7 @@ def get_angle(data_in):
         return [int(np.round(angle1)),int(np.round(angle)),data[3],data[7]]
 
 def arm_detect(x_test):
-    data_in = x_test[0]
+    data_in = x_test
     # if data.shape[0]:
     #print(data)
     flg = 0
@@ -77,4 +79,11 @@ def arm_detect(x_test):
         else:
             flg = 4 #other
     return flg
+
+def nap_detect(data):
+    #flg = 0
+    if data[3*15+1] >= data[3*17+1]:
+        return 0
+    else:
+        return 1
     

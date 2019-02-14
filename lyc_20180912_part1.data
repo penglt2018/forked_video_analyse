@@ -1,5 +1,5 @@
 classes = 25
 train  = /home/mllabs/edward/darknet/scripts/VOCdevkit/VOC2000_LYC_20180912_part1/ImageSets/Main/2000_train.txt          
 valid  = /home/mllabs/edward/darknet/scripts/2000_val.txt
-names = action25_lyc.names
+names = ./action25_lyc.names
 backup = /home/mllabs/edward/darknet/backup_lyc/20180912_part1_V2
