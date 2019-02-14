@@ -14,6 +14,7 @@ import lib.lkj_lib as LKJLIB
 import lib.ftp_client as ftp_client
 from requests import get    # to make GET request
 import traceback
+import datetime
 os_sep = os.path.sep
 video_path='./video'        # set download path
 
@@ -121,7 +122,7 @@ def check_qry_rt(qry_list):
     # resolve video information list
     lkj_file, lkj_st_tm, lkj_ed_tm, video_url, video_st_tm, video_ed_tm,\
     train_type, train_num, channel, trace, driver_1, driver_2,\
-    lkj_id, video_id, video_source = qry_list
+    lkj_id, video_id, video_source, time_deviation = qry_list
 
     # generate 2 flags for lkj and video checking mechanism independently
     # False for normal case and True for abnormal case
@@ -148,10 +149,32 @@ def check_qry_rt(qry_list):
         video_update_flg = True
         main_logger.warning('video_url format error: {0}'.format(video_url))
 
+    # if time_deviation is null, set to 0 in origin list
+    if not time_deviation:
+        main_logger.warning('Time deviation is NULL to lkj file {0}'.format(lkj_file))
+        time_deviation = 0
+
     main_logger.info('Checking video start time')
     if common.is_valid_time(video_st_tm) == False:
         video_update_flg = True
         main_logger.warning('Video start time format error: {0}'.format(video_st_tm))
+    elif time_deviation < 0:
+        ammend_video_st_tm = datetime.datetime.strptime(video_st_tm, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=abs(time_deviation))
+        qry_list[4] = ammend_video_st_tm.strftime('%Y-%m-%d %H:%M:%S')
+    elif time_deviation > 0:
+        ammend_video_st_tm = datetime.datetime.strptime(video_st_tm, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(seconds=abs(time_deviation))
+        qry_list[4] = ammend_video_st_tm.strftime('%Y-%m-%d %H:%M:%S')
+
+    main_logger.info('Checking video end time')
+    if common.is_valid_time(video_ed_tm) == False:
+        video_update_flg = True
+        main_logger.warning('Video end time format error: {0}'.format(video_ed_tm))
+    elif time_deviation < 0:
+        ammend_video_ed_tm = datetime.datetime.strptime(video_ed_tm, '%Y-%m-%d %H:%M:%S') - datetime.timedelta(seconds=abs(time_deviation))
+        qry_list[5] = ammend_video_ed_tm.strftime('%Y-%m-%d %H:%M:%S')
+    elif time_deviation > 0:
+        ammend_video_ed_tm = datetime.datetime.strptime(video_ed_tm, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(seconds=abs(time_deviation))
+        qry_list[5] = ammend_video_ed_tm.strftime('%Y-%m-%d %H:%M:%S')
 
     main_logger.info('Checking train type')
     if not train_type:
@@ -182,7 +205,7 @@ def check_qry_rt(qry_list):
     if not str(driver_2):
         video_update_flg = True
         main_logger.warning('Driver_2 id format error: {0}'.format(driver_2))
-    
+
     if lkj_update_flg == False and video_update_flg == False:
         main_logger.info('Checking video info finish')
         return [True, qry_list]
@@ -321,10 +344,11 @@ def download_file(video_list):
                 lkj_file, lkj_st_tm, lkj_ed_tm,\
                 video_url, video_st_tm, video_ed_tm,\
                 train_type, train_num, channel, trace, driver_1, driver_2,\
-                lkj_id, video_id, video_source = ck_rt[1]
+                lkj_id, video_id, video_source, time_deviation = ck_rt[1]
 
                 # backup video_url at the end of video info list
                 # for modification usage
+				# v = [lkj_file, lkj_st_tm, lkj_ed_tm, video_url, video_st_tm, video_ed_tm,train_type, train_num, channel, trace, driver_1, driver_2, lkj_id, video_id, video_source, time_deviation, video_url]
                 v.append(video_url) 
                 #print(video_url)
                 
@@ -359,6 +383,7 @@ def download_file(video_list):
                 main_logger.info('LKJ filename is set to {0}'.format(v[0]))
 
                 # streo video info
+                _ = v.pop(15)	# v[15] = time_deviation, no need to store currently
                 main_logger.info('Storing video info to table video_info in mysql')
                 insrt_flag = common.store_video_info(mysql_db, v)
                 if insrt_flag == False:
