@@ -43,19 +43,19 @@ def channel_filter(df_in,para,range_judge):
         mid = df_local.iloc[-1,1]
         return mid[:int(mid.index('端') + 1)]
     else:
-        before = df_local[df_local['stamp']<=point].sort_values(by='stamp',ascending=True).iloc[-2:]
+        before_t = df_local[df_local['stamp']<=point].sort_values(by='stamp',ascending=True).iloc[-2:]
         #before是dataFrame
-        next = df_local[df_local['stamp']>point].sort_values(by='stamp',ascending=True).iloc[:2]
-        if len(set(list(map(func_duanhao,before['state']))+list(map(func_duanhao,next['state'])))) == 1:
+        next_t = df_local[df_local['stamp']>point].sort_values(by='stamp',ascending=True).iloc[:2]
+        if len(set(list(map(func_duanhao,before_t['state']))+list(map(func_duanhao,next_t['state'])))) == 1:
             # 判断时间节点所处前后时刻是否进行换端操作
-            return list(map(func_duanhao,before['state']))[0]
+            return list(map(func_duanhao,before_t['state']))[0]
         else:
-            before_1 = df_local[df_local['state'].str.contains('结束')]
-            next_1 = df_local[df_local['state'].str.contains('开始')]
-            if next_1['stamp'].values[0] - point <= range_judge*60:
-                return func_duanhao(next_1['state'].values[0])
+            before_tt = before_t[before_t['state'].str.contains('结束')]
+            next_tt = next_t[next_t['state'].str.contains('开始')]
+            if next_tt['stamp'].values[0] - point <= range_judge*60:
+                return func_duanhao(next_tt['state'].values[0])
             else:
-                return func_duanhao(before_1['state'].values[0])
+                return func_duanhao(before_tt['state'].values[0])
 
 def conti_check_v2(df_in, distance=1):
     """
@@ -185,7 +185,7 @@ def model_time_exclude(data1,data2,time_range):
         if min(np.abs(time_comp-item)) > time_range:
             filt_time.append(item)
     return df1[df1['timestamp'].isin(filt_time)].iloc[:,1:]#[col_data]
-    
+
 def time_filter(data_in,data_lkj,speed_thresh=1,time_jump=120,row_add=5, time_range=3):
     # print(data_lkj)
     """
@@ -354,7 +354,7 @@ def yolo_speed_filter(data_in,data_lkj,speed_thresh=1,time_jump=120,row_add=5,i=
 #     df_yolo_fil1 = df_yolo[df_yolo['motion']==motion_yolo]
 #     df_yolo_out = df_yolo_fil1[df_yolo_fil1['timestamp'].isin(able_lkj_filter)==False]
 #     return df_yolo_out[col_yolo].values.tolist()
-	
+
 
 def lkj_event_exclude(data_in,data_lkj,eve_st,eve_ed,video_tm_range,time_range=1,time_thresh=5):
     """
@@ -439,7 +439,7 @@ def arm_detect_filter(model_data, df_lkj_input, time_range, motion, event_list, 
         if item != 0:
             if key == 0:
                 df_lkj_part = df_lkj.loc[0:item]
-                
+
 
                 df_lkj_part = df_lkj_part.loc[pd.notnull(df_lkj_part['里程']).index.tolist()]
                 df_lkj_part.insert(df_lkj_part.shape[1],'distanceToInitial',np.abs(df_lkj_part['里程']-df_lkj_part.loc[item,'里程'])*1000)
