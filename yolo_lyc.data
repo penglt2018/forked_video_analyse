@@ -1,6 +1,0 @@
-classes = 30
-train  = /home/mllabs/edward/darknet/scripts/2000_train_lyc.txt          
-#valid  = /home/mllabs/edward/darknet/scripts/2000_val.txt
-valid  = /home/mllabs/edward/darknet/scripts/2000_test_lyc.txt
-names = voc_lyc.names
-backup = /home/mllabs/edward/darknet/backup_lyc/anchor_0424

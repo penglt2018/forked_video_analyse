@@ -1,5 +1,0 @@
-classes = 80
-train  = /home/dell/darknet/scripts/VOC2000_LYC_20181025/ImageSets/Main/2000_train.txt          
-valid  = /home/dell/darknet/scripts/2000_val.txt
-names = /home/dell/video_analyse/coco_lyc.names
-backup = /home/dell/darknet/backup_lyc/lyc_cellphone_coco
