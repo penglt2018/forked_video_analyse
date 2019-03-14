@@ -83,7 +83,8 @@ def init_cellphone():
     sys.path.append(dn_path)
     print(dn_path)
     import darknet as dn
-    dn.set_gpu(0)
+    #dn.set_gpu(0)
+    dn.set_gpu(gpu_idx)
     yolo_logger.info('GPU set to {0}'.format(gpu_idx))
     yolo_logger.info('Darknet import successfully')
 
