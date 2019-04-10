@@ -23,7 +23,7 @@ import lib.video_handler as video_handler
 import openpose_handler 
 import time
 os_sep = os.path.sep
-video_path='./video'       # set download path
+video_path='video'       # set download path
 
 def init(log_name):
     ''' Function for initializing main logger,
@@ -193,7 +193,7 @@ def start():
                     print("Openpose execute time: " + str(time.time()-s_time))
                     dir_ct += 1
                     
-                    if dir_ct == dir_tot_ct:
+                    if dir_ct == dir_tot_ct - 1:
                         update_lkj(lkj_id)
 
 if __name__ == '__main__':

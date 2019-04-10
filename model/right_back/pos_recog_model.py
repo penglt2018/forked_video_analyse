@@ -24,7 +24,7 @@ def wrong_head(data):
         return 0
     elif data[16*3] != 0:   # 能看见左眼
         return 2
-    elif data[15*3] == 0 or data[17*3] == 0:   # 看不见右眼或者右耳
+    elif data[17*3] == 0:   # 看不见右耳
         return 3
     else:
         return 0
@@ -115,7 +115,7 @@ def arm_detect(x_test):
 
 def nap_detect(data):
     #flg = 0
-    if data[3*15+1] >= data[3*17+1]:
+    if data[3*15+1] <= data[3*17+1]:
         return 0
     else:
         return 1

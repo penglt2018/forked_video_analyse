@@ -76,7 +76,7 @@ def path_check(pt, logger, msg, err_code):
         logger.error(msg)
         sys.stderr.write('{0}\n'.format(msg))
         raise SystemExit(err_code)
-    
+
 # Function to check file existence.
 def file_check(f, logger, msg, err_code):
     if not os.path.isfile(f):
@@ -110,7 +110,7 @@ def get_openpose_config():
     if type(params) != dict or len(params) < 11:
         raise_error('Error: Openpose params set wrong', 88)
     return openpose_path, params
-    
+
 
 # Function to check video file name
 def video_fname_check(fname):
@@ -125,7 +125,7 @@ def video_fname_check(fname):
         return False
     else:
         return True
-        
+
     # # file name length check
     # if len(f_arr) != 5:
     #     logger.error('Video ' + fname + ' file name length is wrong!')
@@ -184,10 +184,10 @@ def add_to_db(mysql_db, video_info, result_list, table_name, violate, video_obj,
     '''
     global mysql_logger
     mysql_logger.info('Execute begin')
-    
+
     lkj_filename, video_st_tm, video_ed_tm, video_name, \
     train_type, train_num, channel, trace, driver_1, lkj_id, video_url = video_info
-    
+
     for result in result_list:
         '''
         result list format:
@@ -202,7 +202,7 @@ def add_to_db(mysql_db, video_info, result_list, table_name, violate, video_obj,
             frame_st = result[1]
             frame_ed = result[4]
             frame_path=save_path+os_sep+video_name+'_'+'0'*(5-len(str(frame_st)))+str(frame_st)+'.png'
-            
+
             sql = "insert into {0} values (\'{1}\', \'{2}\', \'{3}\', \'{4}\', \'{5}\', \'{6}\', \'{7}\', \'{8}\', \'{9}\', \'{10}\', \'{11}\', \'{12}\', \'{13}\', \'{14}\', now(), \'{15}\', \'{16}\')".\
                     format(table_name, lkj_filename, video_name, video_st_tm, video_ed_tm, \
                     train_type, train_num, channel, trace, driver_1, \
@@ -213,12 +213,12 @@ def add_to_db(mysql_db, video_info, result_list, table_name, violate, video_obj,
                     lkj_filename, video_name, video_st_tm, video_ed_tm,\
                     train_type, train_num, channel, trace, driver_1,\
                     violate, violate_st_tm, video_url)
-        
+
         mysql_logger.info('Executing insert sql: {0}'.format(sql))
         try:
             mysql_db.Insert(sql)
             mysql_logger.info('Insert sql execute successfully')
-            
+
             if save_path != None:
                 video_obj.write_frames(save_path, video_name, frame_st, frame_ed)
 
@@ -231,7 +231,7 @@ def channel_filt(result_list, lkj_df, video_name):
     '''
         this function is used for excluding non-operate
         channel by events in lkj data
-        input: 
+        input:
                 result_list: openpose returned leave result list
                 lkj_df: lkj dataframe
                 video_name: video name
@@ -290,14 +290,14 @@ def get_lkj(lkj_local_file):
                 [ True/False, log infor, LKJ pandas dataframe ]
     '''
     try:
-        lkj_data = pd.read_csv(lkj_local_file, encoding='utf-8', names=['序号','事件','时间','里程','其他','距离','信号机','信号','速度','限速','零位','牵引','前后','管压','缸压','转速电流','均缸1','均缸2','dummy1','dummy2','dummy3','dummy4'])
+        lkj_data = pd.read_csv(lkj_local_file, encoding='utf-8', names=['序号','事件','时间','里程','其他','距离','信号机','信号','速度','限速','零位','前后','牵引','管压','缸压','转速电流','均缸1','均缸2','dummy1','dummy2','dummy3','dummy4'])
         result = [True, 'LKJ file read successfully', lkj_data]
     except Exception:
         result = [False, 'LKJ file read error: {0}'.format(traceback.format_exc())]
     return result
 
 def get_video_info(video_name, mysql_db):
-    ''' Retrieve video infomation from Mysql 
+    ''' Retrieve video infomation from Mysql
         input:
                 video_name: video filename without suffix
                 mysql_db: mysql database connector object
@@ -305,10 +305,10 @@ def get_video_info(video_name, mysql_db):
                 [ False, log info ] when failed, otherwise
                 [ True, log info, sql_result ]
     '''
-    global mysql_logger    
+    global mysql_logger
     # get video_start time via mysql
     mysql_logger.info('searching infomation related to video {0}'.format(video_name))
-    qry_result = False      
+    qry_result = False
     sql = "select lkj_filename,\
                 date_format(video_st_tm, '%Y-%m-%d %H:%i:%s'), \
                 date_format(video_ed_tm, '%Y-%m-%d %H:%i:%s'), \
@@ -323,7 +323,7 @@ def get_video_info(video_name, mysql_db):
                 from violate_result.video_info \
                 where video_name = \'{0}\'".format(video_name)
 
-    qry_result = query_sql(mysql_db, 'mysql', sql)    
+    qry_result = query_sql(mysql_db, 'mysql', sql)
 
     # check video info
     print(qry_result)
@@ -387,7 +387,7 @@ def connect_db(db_name):
     else:
         log_info = 'Can not connect to database {0}, database does not exist'.format(db_name)
         raise_error(log_info, 40)
-        
+
 def close_db(db, db_name):
     ''' Function for closing database:
         Input:
@@ -413,7 +413,7 @@ def close_db(db, db_name):
 
 def query_sql(db, db_name, sql):
     ''' Function for query sql and log
-        input: 
+        input:
                 db: database object
         return:
                 query_rt: sql result when no error occur, otherwise "False"
@@ -482,6 +482,20 @@ def update_lkj_table(lkj_id, oracle_db):
         oracle_logger.error('Update sql execute failed!', exc_info=True)
         return False
 
+def update_lkj_add_num(lkj_id, oracle_db, num):
+    global oracle_logger, mysql_logger
+    oracle_logger.info('updating lkj table begin')
+    #update_sql = 'update lkjvideoadmin.lkjvideoproblem set videoanalyzed = videoanalyzed + {0}, ISANALYZED = 1 where lkjid = {1}'.format(num, lkj_id)
+    update_sql = 'update lkjvideoadmin.lkjvideoproblem set videoanalyzed = videoanalyzed + {0}, ISANALYZED = ISANALYZED + {0} where lkjid = {1}'.format(num, lkj_id)
+    oracle_logger.info('Executing update sql {0}'.format(update_sql))
+    try:
+        oracle_db.Exec(update_sql)
+        oracle_logger.info('Update sql execute successfully')
+        return True
+    except Exception as e:
+        oracle_logger.error('Update sql execute failed!', exc_info=True)
+        return False
+
 def update_lkj_group_table(lkj_id, oracle_db, mysql_db):
     ''' Function for updating LKJ table in oracle database based on
         the number of videos grouped by lkj id
@@ -500,7 +514,8 @@ def update_lkj_group_table(lkj_id, oracle_db, mysql_db):
     cnt = cnt_result[0][0]
 
     oracle_logger.info('Updating lkj table begin')
-    update_sql = 'update lkjvideoadmin.lkjvideoproblem set videoanalyzed = videoanalyzed + {0}, ISANALYZED = 1 where lkjid = {1}'.format(cnt, lkj_id)
+    #update_sql = 'update lkjvideoadmin.lkjvideoproblem set videoanalyzed = videoanalyzed + {0}, ISANALYZED = 1 where lkjid = {1}'.format(cnt, lkj_id)
+    update_sql = 'update lkjvideoadmin.lkjvideoproblem set videoanalyzed = videoanalyzed + {0}, ISANALYZED = ISANALYZED + {0} where lkjid = {1}'.format(cnt, lkj_id)
     oracle_logger.info('Executing update sql {0}'.format(update_sql))
     try:
         oracle_db.Exec(update_sql)
@@ -595,4 +610,4 @@ def time_reformat(tm):
 
 def date_time_reformat(date, tm):
     return date_reformat(date) + " " + time_reformat(tm)
-    
+

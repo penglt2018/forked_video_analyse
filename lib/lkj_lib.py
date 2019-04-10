@@ -8,13 +8,54 @@ func_time = lambda x:time.strftime('%Y-%m-%d %H:%M:%S',(time.localtime(x))) #时
 func_revis = lambda x:'2018-5-3 '+x.replace("'","") #special use, can be dropped.
 func_duanhao = lambda x:x[:x.index('端')+1]
 
-def ele_fil(list_in,str_in):
-    for item in list_in:
-        if str_in in item:
-            return item
+names = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '前后',
+         '牵引', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
 
-#data_in部分的数据连续时间段筛选，其中time_continuty表示连续时间长度
+def predata(data_in):
+    """
+    :data_in:2d-list
+    [ [标准时间2, 帧号2, ...],
+      [标准时间1, 帧号1, ...],
+                      ...
+    ]
+
+    :return: DataFrame, 按timestamp和帧号进行升序排列的索引为0开始，step为1的增长序列
+        e.g. [ [标准时间1, 帧号1, ..., 时间戳1],
+               [标准时间2, 帧号2, ..., 时间戳2],
+                ...
+             ]
+    """
+    col_add = list(map(lambda x:'col_'+str(x),range(len(data_in[0])-2)))
+    #df = pd.DataFrame(data_in,columns=['time','frame','filename'])
+    df = pd.DataFrame(data_in, columns=['time', 'frame']+col_add)
+    df['timestamp'] = list(map(func_stamp, df['time']))
+    df_out = df.sort_values(by=['timestamp','frame']).reset_index(drop=True)
+    return df_out
+
+
+
+
+
+#对data_in中数据连续时间段筛选，其中time_continuty表示连续时间长度
 def dataContinutyCut(data_in,time_continuty=10):
+    """
+    选取持续时间超过time_continuty的时间段。
+    :param data_in: 2d-list
+                    [ [标准时间1, x1, ...],
+                        ...
+                      [标准时间10, x10, ...]
+                      [标准时间11, x11, ...],
+                      [标准时间13, x13, ...],
+                      [标准时间14, x14, ...]
+                    ]
+    :param time_continuty:持续时间条件阈值(秒)；
+    :return: DataFrame：
+                    [ [标准时间1, x1, ...],
+                        ...
+                      [标准时间10, x10, ...]
+                      [标准时间11, x11, ...]
+                    ]
+    """
     df_out = pd.DataFrame([])
     df = predata(data_in)
     para = conti_check_v2(df,distance=1)
@@ -57,13 +98,38 @@ def channel_filter(df_in,para,range_judge):
             else:
                 return func_duanhao(before_tt['state'].values[0])
 
+def get_lkj_ab(df_lkj_in):
+    """
+    判断视频数据端号----适用于带A\B节的车
+    param df_lkj_in: 输入为lkj的DataFrame,其中列名为names；
+    return: 机车号所在行的“其他”最后一个元素
+    """
+
+    ele_out = df_lkj_in.loc[df_lkj_in['事件']=='机车号','其他'].values.tolist()
+    if len(np.unique(ele_out)) != 1:
+        return False
+    else:
+        if str(ele_out[0])[-1].isalpha():
+            return str(ele_out[0])[-1]
+        else:
+            return False
+
+
 def conti_check_v2(df_in, distance=1):
     """
     this function is made @ 2017/11/23, the latest vision.
-    这个函数是为了查找故障时刻的连续性
-    :param df_in: 状态判定为非正常的df结构数据,且索引为从0开始的整数序列***@condition must be satisfied.
-    :param distance:对应时间连续性要求参数
-    :return: 故障时刻点在df_in中的row索引
+    这个函数可以用于解决报违章间隔过短的问题。
+    :param df_in: DataFrame,且索引为从0开始的整数序列***@condition must be satisfied.类似于
+                    [ [tiemstamp1, x1, ...],
+                      [timestamp2, x2, ...],
+                      ...
+                    ]
+    :param distance:对应tiemstamp连续性阈值，决定断点多长时间算断开，若小于该时间，则算连续;
+                    取值按照timestamp的精度；
+    :return: list,每个元素对应包含df_in中一个连续段的起始和终止索引。
+             eg.[[0, 10],
+                  [11, 19],
+                  ...]第一个元素表示：df_in的第0行到第10行为tiemstamp连续的。
     """
     para_conti = []
     time_series = df_in['timestamp'].values
@@ -86,7 +152,30 @@ def conti_check_v2(df_in, distance=1):
     return para_conti
 
 def LKJ_pre(df_in,time_jump,row_add):
-    #输入数据有两列，一列为时间，1列为速度，时间间隔超过'time_jump'按照首尾节点进行前后5S填充，其他则进行线性插值
+    """
+    df_in:DataFrame,
+    time_jump：阈值，当lkj中时间跳跃过大时，则仅补齐端点前后row_add行；否则对缺失时间LKJ数据进行线性差值补齐
+    row_add:由于Lkj和视频时间存在一定的偏差，row_add即为对Lkj补齐
+    return:DataFrame:
+        e.g. 若输入： time_jump = 3, row_add = 2        
+            df_in列名：时间， 速度, x, y
+            [[    时间1,    1,    ...],
+             [    时间2,    5,    ...],
+             [    时间4,    15, ...],
+             [    时间10,    30,    ...]
+            ]
+        返回
+            [[    时间1,    1,    ...],
+             [    时间2,    5,    ...],
+             [    时间3,    5+(15-5)/(4-2), ...],
+             [    时间4,    15, ...],
+             [    时间5,    15, ...],
+             [    时间6,    15, ...],
+             [    时间8,    30, ...],
+             [    时间9,    30,    ...],
+             [    时间10,    30,    ...]
+            ]
+    """
     df = df_in.copy()
     #先去掉速度为NAN的行
     # df_v1 = df[df['速度'] != ' nan']#真实读出数据可能需要修改
@@ -120,14 +209,6 @@ def LKJ_pre(df_in,time_jump,row_add):
 #     # df_out = df.sort_values(by='timestamp').reset_index(drop=True)
 #     return df
 
-def predata(data_in):
-    #对应数据为时间list
-    col_add = list(map(lambda x:'col_'+str(x),range(len(data_in[0])-2)))
-    #df = pd.DataFrame(data_in,columns=['time','frame','filename'])
-    df = pd.DataFrame(data_in, columns=['time', 'frame']+col_add)
-    df['timestamp'] = list(map(func_stamp, df['time']))
-    df_out = df.sort_values(by=['timestamp','frame']).reset_index(drop=True)
-    return df_out
 
 # def select_proper(df_in,para_in,):
 #     """
@@ -147,33 +228,56 @@ def predata(data_in):
 #     out = list(np.unique(out))
 #     return out
 
-def select_proper(df_in,para_in,col_out, time_range):
+def select_proper(df_in,para_in,col_out, time_range, Mode_in = 'Situ1'):
+
     """
-    本函数取出满足持续时间不超过5秒或者超过5秒的首尾时刻
-    :param df_in: 由predata产生的DataFrame
-    :param para_in: 由time_Check_v2产生的列表
-    :col_out：输出数据的字段名
-    :return: 可用时间点序列
+    @revised records:20190312
+    本函数取出df_in中满足持续时间>=time_range秒的首尾时刻的col_out列数据
+    :param df_in: Lkj与模型结果按照时间关联的2D-DataFrame
+                e.g. df [[timestamp1，frame1, x, y, ...],
+                         [timestamp2, frame2, x, y, ...],
+                         ...
+                        ]
+    :param para_in: 对df_in的timestamp列进行conti_Check_v2产生的列表
+                e.g. 2-list
+                    eg.[[0, 10],
+                         [11, 12],
+                         ...
+                        ]
+    :param col_out：1-D list: 输出数据的字段名。
+    :param time_range: int: 持续时间阈值，单位秒。
+    :param Mode_in: 默认是按照20190313之前的逻辑运算，mode_in进行赋值时，则为选出其中前述条件的DF数据段，并进行关联。
+    :return: 2-D list: 在df_in中取para_in中对应index的timestamp差满足连续时间阈值的time_range
+                       条件的col_out列。
+                    e.g. 若 time_range = 2,
+                         [[timestamp1, frame1, x1, y1, ..., timestamp11, frame11, x11, y11...],
+                         ...
+                         ]
     """
-    out = []
-    # col_out = ['time','frame','filename']
-    for item in para_in:
-        if df_in.ix[item[1],'timestamp'] - df_in.ix[item[0],'timestamp'] >= time_range:
-           element_start = [df_in.ix[item[0],col] for col in col_out]
-           element_end = [df_in.ix[item[1],col] for col in col_out]
-           out.append(element_start + element_end)
-    #     elif item[1] - item[0] == 0:
-    #         out.extend([df_in.ix[item[1],'time']])
-    #     else:
-    #         out.extend(df_in['time'].loc[item[0]:item[1]].values)
-    # out = list(np.unique(out))
+    if Mode_in == 'Situ1':
+        out = []
+        # col_out = ['time','frame','filename']
+        for item in para_in:
+            if df_in.ix[item[1],'timestamp'] - df_in.ix[item[0],'timestamp'] >= time_range:
+               element_start = [df_in.ix[item[0],col] for col in col_out]
+               element_end = [df_in.ix[item[1],col] for col in col_out]
+               out.append(element_start + element_end)
+    else:
+        out = pd.DataFrame([])
+        for item in para_in:
+            if df_in.ix[item[1],'timestamp'] - df_in.ix[item[0],'timestamp'] >= time_range:
+                out = out.append(df_in.loc[item[0]:item[1]])
+        out = out.sort_values(by='timestamp').reset_index(drop=True)
     return out
 
 def model_time_exclude(data1,data2,time_range):
-    #data1: main data, left side
-    #col_data = ['time']+['col_%s'%i for i in range(len(data1[0])-1)]
-    #df1 = pd.DataFrame(data1,columns=col_data)
-    #df2 = pd.DataFrame(data2, columns=col_data)
+    """
+    去掉data1中时间与data2相等的行，时间相等由time_range决定。
+    param data1:带时间列的lkj DF
+    param data2:带有时间列的DF
+    param time_range: 计算多少差值算相等。
+    return: 与data2中时间不相等(不相等由time_range决定)的行
+    """
     df1 = data1.copy()
     df2 = data2.copy()
     df1.insert(0,'timestamp',list(map(func_stamp,df1['时间'])))
@@ -189,7 +293,11 @@ def model_time_exclude(data1,data2,time_range):
 def time_filter(data_in,data_lkj,speed_thresh=1,time_jump=120,row_add=5, time_range=3):
     # print(data_lkj)
     """
-    :param data_in:输入数据，为多维列表
+    :param data_in:2d-list
+            [ [标准时间2, 帧号2, ...],
+              [标准时间1, 帧号1, ...],
+                              ...
+            ]
     :param data_lkj:lkj数据，与data_in进行时间关联
     :param speed_thresh:限制速度阈值，作为筛选结果之用
     :param time_jump:lkj填充参数，对应的
@@ -211,21 +319,37 @@ def time_filter(data_in,data_lkj,speed_thresh=1,time_jump=120,row_add=5, time_ra
     return resu
 
 def single_person(data_in,data_lkj,time_range=3,distance_add=30,time_continuty=10):
-    # edited by chujp@20180911,主要进行'出站','进站'时刻数据的关联；
+    # edited by chujp@20190313,主要进行'出站','进站'时刻数据的关联；
     """
-    :param data_in:DataFrame,'时间， 帧号， 文件名，标签'，主数据源
-    :param data_lkj:lkj数据，需要进行时间填充，副数据源
-    :param time_range:持续时间阈值
-    :param time_continuty:表示data_in的连续时间持续阈值
-    :return:data_in和lkj联合后数据，数据列同'time_filter'结果，根据需要，后续可以通过添加：'出站'、'进站'的标签
+        列车运行要求第一个出站到第二个出站；以及倒数第二个进站到最后一个进站要求双人值乘，
+        本函数找出要求中只有一个人值乘的违章。
+    :param data_in: 2-D DataFrame,'时间， 帧号， 文件名，标签'，主数据源
+                   e.g.  [ [标准时间2, 帧号2, ...],
+                             [标准时间1, 帧号1, ...],
+                              ...
+                         ]
+    :param data_lkj: 2-D DataFrame: lkj完整数据，带列名，需要进行时间填充。
+    :param time_range:int: 用于选出违章结束-起始时间大于time_range。
+    :param distance_add:int: 对应tiemstamp连续性阈值，决定报违章断点多长时间算断开，若小于该时间，则算连续。
+                        e.g. 若distance_add = 10, time_range = 3，
+                             1,2,3,7,8,9 秒均报违章，则最终只会报1-9秒一条违章。
+    :param time_continuty:int: 用于对模型报出结果进行连续型筛选，滤除模型报出的毛刺。
+                        e.g. 选出模型结果持续报time_continuty以上的数据。
+
+    :return: 2-D list: select_proper函数返回结果。 
+                    e.g. [[timestamp1, frame1, x1, y1, ..., timestamp11, frame11, x11, y11...],
+                         ...
+                         ]
     """
     # df = predata(data_in)
-    df = dataContinutyCut(data_in,time_continuty=time_continuty)
+    df = dataContinutyCut(data_in,time_continuty=time_continuty)    # 要求data_in中相同违章连续报相同违章超过time_continuty秒，才算违章。
     resu_gather = []
     if df.shape[0] > 0:
         col_data = ['time', 'frame']+list(map(lambda x:'col_'+str(x),range(len(data_in[0])-2)))
-        names = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
-                 '前后', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
+        # names = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
+        # #          '前后', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
+        # names = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '前后',
+        #          '牵引', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
         # for item in '出站':
         for item in ['出站','进站']:
             if item == '出站':
@@ -244,8 +368,11 @@ def single_person(data_in,data_lkj,time_range=3,distance_add=30,time_continuty=1
                 df1 = pd.merge(df,df_lkj1,how='inner',on='timestamp')
                 df1 = df1.sort_values(by=['timestamp','frame']).reset_index(drop=True)
                 if df1.shape[0] > 0:
-                    para = conti_check_v2(df1,distance=distance_add)#修改之处
-                    resu1 = select_proper(df1,para,col_data,time_range)
+                    
+                     #修改之处
+                    resu_local = select_proper(df1,para,col_data,time_range, Mode_in = 'Situ2')
+                    para = conti_check_v2(resu_local,distance=distance_add)
+                    resu1 = [[resu_local.ix[item[0],col] for col in col_data]+ [resu_local.ix[item[1],col] for col in col_data] for item in para]
                 else:
                     resu1 = []
             except:
@@ -253,17 +380,68 @@ def single_person(data_in,data_lkj,time_range=3,distance_add=30,time_continuty=1
             resu_gather = resu_gather+resu1
     return resu_gather
 
+# def single_person(data_in,data_lkj,time_range=3,distance_add=30,time_continuty=10):
+#     # edited by chujp@20180911,主要进行'出站','进站'时刻数据的关联；
+#     """
+#         列车运行要求第一个出站到第二个出站；以及倒数第二个进站到最后一个进站要求双人值乘，
+#         本函数找出要求中只有一个人值乘的违章。
+#     :param data_in: 2-D DataFrame,'时间， 帧号， 文件名，标签'，主数据源
+#                    e.g.  [ [标准时间2, 帧号2, ...],
+#                              [标准时间1, 帧号1, ...],
+#                               ...
+#                          ]
+#     :param data_lkj: 2-D DataFrame: lkj完整数据，带列名，需要进行时间填充。
+#     :param time_range:int: 违章起始结束时间大于time_range。
+#     :param time_continuty:表示data_in的连续时间持续阈值
+#     :return:data_in和lkj联合后数据，数据列同'time_filter'结果，根据需要，后续可以通过添加：'出站'、'进站'的标签
+#     """
+#     # df = predata(data_in)
+#     df = dataContinutyCut(data_in,time_continuty=time_continuty)    # 要求data_in中相同违章连续报相同违章超过time_continuty秒，才算违章。
+#     resu_gather = []
+#     if df.shape[0] > 0:
+#         col_data = ['time', 'frame']+list(map(lambda x:'col_'+str(x),range(len(data_in[0])-2)))
+#         names = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
+#                  '前后', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
+#         # for item in '出站':
+#         for item in ['出站','进站']:
+#             if item == '出站':
+#                 data_part = data_lkj[data_lkj['事件']==item]
+#                 if data_part.shape[0] >= 2:
+#                     st_time = data_part.iloc[0,names.index('时间')]
+#                     ed_time = data_part.iloc[1,names.index('时间')]
+#                     df_lkj1 = pd.DataFrame(np.arange(func_stamp(st_time),func_stamp(ed_time)+1).reshape(-1,1),columns=['timestamp'])
+#             else:
+#                 data_part = data_lkj[data_lkj['事件'] == item]
+#                 if data_part.shape[0] >= 2:
+#                     st_time = data_part.iloc[-2, names.index('时间')]
+#                     ed_time = data_part.iloc[-1, names.index('时间')]
+#                     df_lkj1 = pd.DataFrame(np.arange(func_stamp(st_time), func_stamp(ed_time) + 1).reshape(-1, 1),columns=['timestamp'])
+#             try:
+#                 df1 = pd.merge(df,df_lkj1,how='inner',on='timestamp')
+#                 df1 = df1.sort_values(by=['timestamp','frame']).reset_index(drop=True)
+#                 if df1.shape[0] > 0:
+
+#                     para = conti_check_v2(df1,distance=distance_add) #修改之处
+#                     resu1 = select_proper(df1,para,col_data,time_range)
+#                 else:
+#                     resu1 = []
+#             except:
+#                 resu1 = []
+#             resu_gather = resu_gather+resu1
+#     return resu_gather
+
 def channel_shift(data_in,lkj_data,st_in,et_in,time_range=20):
     #added by chujp @20180914
     """
+    data_in为司机室只有一个司机的数据，若换端过程中司机室单人值乘状态持续时间少于time_range秒，则报出对应的lkj中X端结束的时间及"其他"列
     :param data_in:类似于yolo_event_relate中的第一个输入；
     :param data_lkj: pd.DataFrame,需要按照给出条件进行数据筛选
     :param time_range: 端变化情况下最短聚合时间
-    :param st_in,et_in:表示对应的lkj检测事件范围，只对该时间段内的数据进行判断；
-    :return: 若3中小于阈值，返回LKJ['时间', '其他']，时间为端结束时间
+    :param st_in,et_in:表示对应的lkj检测时间范围，只对该时间段内的数据进行判断；
+    :return: 2D-list, 若3中小于阈值，返回LKJ['时间', '其他']，时间为端结束时间
     """
-    names = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
-             '前后', '管压', '缸压', '转速电流', '均缸1', '均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
+    # names = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
+    #          '前后', '管压', '缸压', '转速电流', '均缸1', '均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
     #names表示对应data_lkj的字段名
     df = predata(data_in)
     # col_data = ['time', 'frame']+list(map(lambda x:'col_'+str(x),range(len(data_in[0])-2)))
@@ -293,6 +471,10 @@ def channel_shift(data_in,lkj_data,st_in,et_in,time_range=20):
     return resu_out
 
 def yolo_speed_filter(data_in,data_lkj,speed_thresh=1,time_jump=120,row_add=5,i=1):
+    """
+
+
+    """
     # print(data_lkj)
     df = predata(data_in)
     col_data = ['time', 'frame']+list(map(lambda x:'col_'+str(x),range(len(data_in[0])-2)))
@@ -362,9 +544,16 @@ def lkj_event_exclude(data_in,data_lkj,eve_st,eve_ed,video_tm_range,time_range=1
     step1:对data_in时间进行前后拓宽，拓宽长度为time_range
     step2:筛选规则是选取lkj中进站、出站数据段,可能有多段
     step3:对step2中每段数据与step1处理数据进行集合做差，给出lkj多余时间超过5S的起始进站时间
-    :param data_in:DataFrame,'时间， 帧号， 文件名，标签'，主数据源，对时间需要进行时间填充
+   
+    本程序用于检测副司机未立岗。
+    data_in 为副司机立岗模型返回结果。
+    data_lkj 经过操作后，为每一段进出站时间数据。
+    若副司机全程立岗，则lkj进出站全程时间 - 副司机立岗时间 = 0
+    time_thresh 用于判断lkj进出站全程时间 - 副司机立岗时间 > time_thresh秒则认为未立岗。
+
+    :param data_in:DataFrame,'时间， 帧号， 文件名，标签'，副司机立岗检测结果
     :param data_lkj:lkj数据，需要进行时间填充，输出结果数据源
-    :param time_range:data_in补充时间长度
+    :param time_range:检测结果的有效时间(也就是单条检测结果的持续时间)
     :param time_thresh:lkj中多余时间点数约束阈值
     :param video_tm_range: 视屏时间范围，用于约束lkj时间范围
     :return:符合step3输出结果的符合条件的行：时间、事件、信号--列数据
@@ -375,8 +564,8 @@ def lkj_event_exclude(data_in,data_lkj,eve_st,eve_ed,video_tm_range,time_range=1
     st_time = func_stamp(video_tm_range[0])
     ed_time = func_stamp(video_tm_range[1])
     col_out = ['时间','事件','信号']
-    names = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
-             '前后', '管压', '缸压', '转速电流', '均缸1', '均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
+    # names = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
+    #          '前后', '管压', '缸压', '转速电流', '均缸1', '均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
     time_data = df_data['timestamp'].values.tolist()
     time_data = [list(range(int(item)-time_range,int(item)+time_range+1)) for item in time_data]
     data_time_list = set(np.unique(sum(time_data,[])))
@@ -398,23 +587,28 @@ def lkj_event_exclude(data_in,data_lkj,eve_st,eve_ed,video_tm_range,time_range=1
 def arm_detect_filter(model_data, df_lkj_input, time_range, motion, event_list, lkj_condi,
                       speed_thresh, distance_thresh):
     """
+    该函数用于检测手比相关动作。 motion用于筛选模型返回手比动作（e.g. 手比、握拳），event_list用于筛选lkj事件（e.g. 过分相、进出站），lkj_condi用于
+    筛选lkj信号灯，distance_thresh 用于判断距离event_list事件点的距离。
+
+    函数返回在距离event_list事件点前distance_thresh米内的未作手比的lkj事件时间点与lkj信息（时间、信号、事件、距离）。
+
     进行lkj和yolo结果的数据关联，分为两部分数据：
     YOLO：转为DataFrame，进行motion过滤
     LKJ：首先对lkj数据：“事件”进行event_list查找，按照里程和速度进行数据段筛选，找出各数据段起始时间和结束事件，
     对model_data时间列进行筛选，筛选后数据行数==0的输出对应的LKJ事件时间；
-    :param model_data:yolo数据
+    :param model_data:2d-list,yolo 检测结果数据
     :param df_lkj_input:lkj输入数据,全字段数据
-    :param time_range:lkj数据时间大的范围
-    :param motion_yolo:yolo动作结果过滤
-    :param event_list:lkj判断事件，类型为list
-    :param lkj_condi:lkj筛选条件
-    :param speed_thresh:lkj速度限制
-    :param distance_thresh:离程限制,单位为km
-    :return:yolo时间匹配不上的lkj事件所在行集合
+    :param time_range:1d-list,含函数关注的lkj数据时间范围，e.g. ['2019-3-15 09:56:10', '2019-3-15 15:05:00']
+    :param motion_yolo:1d-list, yolo检测动作list, 用于model_data 筛选
+    :param event_list:1d-list, lkj事件筛选集合
+    :param lkj_condi:1d-list, lkj信号筛选条件
+    :param speed_thresh:float, lkj速度筛选条件
+    :param distance_thresh:离程限制,单位为m
+    :return:与yolo过滤后数据时间匹配不上的lkj事件所在行集合
     """
     # motion为列表或者tuple
-    name_lkj = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
-                 '前后', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
+    # name_lkj = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
+    #              '前后', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
     out_col = ['时间', '信号', '事件', '距离']
     # print(model_data)
     col_yolo = ['time', 'frame', 'motion'] + ['col_%s' % i for i in range(len(model_data[0]) - 4)]
@@ -425,7 +619,7 @@ def arm_detect_filter(model_data, df_lkj_input, time_range, motion, event_list, 
     else:
         df_yolo_fil = df_yolo
     df_lkj_cp = df_lkj_input.copy()
-    df_lkj = pd.DataFrame(df_lkj_cp, columns=name_lkj)
+    df_lkj = pd.DataFrame(df_lkj_cp, columns=names)
     df_lkj.insert(0, 'timestamp', list(map(func_stamp, df_lkj['时间'])))
     st_time = func_stamp(time_range[0])
     ed_time = func_stamp(time_range[1])
@@ -502,23 +696,11 @@ def arm_detect_filter(model_data, df_lkj_input, time_range, motion, event_list, 
 def arm_detect_include_filter(model_data, df_lkj_input, time_range, motion, event_list, lkj_condi,
                       speed_thresh, distance_thresh):
     """
-    进行lkj和yolo结果的数据关联，分为两部分数据：
-    YOLO：转为DataFrame，进行motion过滤
-    LKJ：首先对lkj数据：“事件”进行event_list查找，按照里程和速度进行数据段筛选，找出各数据段起始时间和结束事件，
-    对model_data时间列进行筛选，筛选后数据行数==0的输出对应的LKJ事件时间；
-    :param model_data:yolo数据
-    :param df_lkj_input:lkj输入数据,全字段数据
-    :param time_range:lkj数据时间大的范围
-    :param motion_yolo:yolo动作结果过滤
-    :param event_list:lkj判断事件，类型为list
-    :param lkj_condi:lkj筛选条件
-    :param speed_thresh:lkj速度限制
-    :param distance_thresh:离程限制
-    :return:yolo时间匹配不上的lkj事件所在行集合
+    与arm_detect_filter相反，函数返回在距离event_list事件点前distance_thresh米内的有手比的lkj事件时间点与lkj信息（时间、信号、事件、距离）
     """
     # motion为列表或者tuple
-    name_lkj = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
-                 '前后', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
+    # name_lkj = ['序号', '事件', '时间', '里程', '其他', '距离', '信号机', '信号', '速度', '限速', '零位', '牵引',
+    #              '前后', '管压', '缸压', '转速电流', '均缸1','均缸2', 'dummy1', 'dummy2', 'dummy3', 'dummy4']
     out_col = ['时间', '信号', '事件', '距离']
     # print(model_data)
     col_yolo = ['time', 'frame', 'motion'] + ['col_%s' % i for i in range(len(model_data[0]) - 4)]
@@ -529,7 +711,7 @@ def arm_detect_include_filter(model_data, df_lkj_input, time_range, motion, even
     else:
         df_yolo_fil = df_yolo
     df_lkj_cp = df_lkj_input.copy()
-    df_lkj = pd.DataFrame(df_lkj_cp, columns=name_lkj)
+    df_lkj = pd.DataFrame(df_lkj_cp, columns=names)
     df_lkj.insert(0, 'timestamp', list(map(func_stamp, df_lkj['时间'])))
     st_time = func_stamp(time_range[0])
     ed_time = func_stamp(time_range[1])

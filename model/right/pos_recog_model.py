@@ -29,7 +29,7 @@ def wrong_head(data):
     #     return 4
     # elif (data[48] == -1) & (data[45] == -1) & (data[51] != -1) & (data[54] == -1):  # 只看见右耳（左偏头）
     #     return 5
-    
+
     # elif (data[48] == -1) & (data[45] ==-1) & (data[51] ==-1) & (data[54] != -1):#只看见左耳（右偏头）
     #     return 7
     else:
@@ -37,7 +37,7 @@ def wrong_head(data):
 
 def nap_detect(data):
     #flg = 0
-    if data[3*15+1] >= data[3*17+1]:
+    if data[3*15+1] <= data[3*17+1]:
         return 0
     else:
         return 1
