@@ -20,7 +20,7 @@ import os
 os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.utf8'
 import lib.common as common
 import lib.video_handler as video_handler
-import openpose_handler 
+import openpose_handler
 import time
 os_sep = os.path.sep
 video_path='video'       # set download path
@@ -28,9 +28,9 @@ video_path='video'       # set download path
 def init(log_name):
     ''' Function for initializing main logger,
         databse connector objects, darknet network, and temp file
-        Input: 
+        Input:
                 log name
-        Return: 
+        Return:
                 return True if all global variables are generated successfully,
                 otherwise return False
     '''
@@ -39,13 +39,13 @@ def init(log_name):
     oracle_db = False
     mysql_db = False
     main_logger = common.get_logger(log_name)
-         
+
 
     # initialize openpose
     openpose_handler.init()
 
-    
-    
+
+
 
     # connect to Oracle database
     main_logger.info('Connecting to Oracle database')
@@ -63,7 +63,7 @@ def init(log_name):
         main_logger.error(mysql_conn_rt[1])
     else:
         main_logger.info(mysql_conn_rt[1])
-        mysql_db = mysql_conn_rt[2] 
+        mysql_db = mysql_conn_rt[2]
 
     # create a temp file to record image filenames
     # which needs to be saved
@@ -81,7 +81,7 @@ def init(log_name):
         if mysql_db != False:
             common.close_db(mysql_db, 'mysql')
         return False
-   
+
 def run_openpose(video_obj, video_info, lkj_file):
     '''
     '''
@@ -93,7 +93,7 @@ def run_openpose(video_obj, video_info, lkj_file):
     video_height = video_obj.get_video_height
     fps = video_obj.get_video_fps
 
-    
+
     if frame_mat == [] or frame_mat == [[]]:
         main_logger.warning('Empty frame from video {0}'.format(video_name))
     else:
@@ -119,7 +119,7 @@ def run_openpose(video_obj, video_info, lkj_file):
                     if store_rt_flag == False:
                         main_logger.error('Violation result of video {0} stored contains some errors, please refer to openpose log for further details'.format(video_name))
                     else:
-                        main_logger.info('Violation result of video {0} stored successfully'.format(video_name))       
+                        main_logger.info('Violation result of video {0} stored successfully'.format(video_name))
 
 def update_video(video_name):
     global main_logger,oracle_db
@@ -127,7 +127,7 @@ def update_video(video_name):
     if common.update_video_table_with_name(video_name, oracle_db) == True:
         main_logger.info('Video table update successfully')
     else:
-        main_logger.error('Video table update failed') 
+        main_logger.error('Video table update failed')
 
 def update_lkj(lkj_id):
     global main_logger, oracle_db, mysql_db
@@ -160,7 +160,7 @@ def start():
                 else:
                     video_info = video_info_rt[2]
                     main_logger.info(video_info_rt[1])
-                    
+
                     # fetch related lkj file
                     lkj_file = video_info[0]
                     video_name = video_info[3]
@@ -176,7 +176,7 @@ def start():
                         try:
                             video_obj = video_handler.VideoHandler(path_file)
                             main_logger.info('Extracting frames from video {0}'.format(path_file))
-                            video_obj.set_video_frames(skip_step=4, bilateralFlg = True)
+                            video_obj.set_video_frames(skip_step=4, bilateralFlg = False)
                             video_ini_flag = True
                             main_logger.info('Frames extraction from video {0} successfully'.format(path_file))
                         except Exception:
@@ -185,14 +185,14 @@ def start():
 
                         # parallel computing
                         if video_ini_flag == True:
-                            
+
                             run_openpose(video_obj, video_info, lkj_file)
-                            
-                    # update video table 
+
+                    # update video table
                     update_video(video_name)
                     print("Openpose execute time: " + str(time.time()-s_time))
                     dir_ct += 1
-                    
+
                     if dir_ct == dir_tot_ct - 1:
                         update_lkj(lkj_id)
 
@@ -200,4 +200,4 @@ if __name__ == '__main__':
     init('run_model')
     start()
     common.close_db(oracle_db, 'oracle')
-    common.close_db(mysql_db, 'mysql')                                    
+    common.close_db(mysql_db, 'mysql')
