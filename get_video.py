@@ -431,7 +431,7 @@ def download_file(video_list):
                     if ftp_flag == True:
                         #video_channel = get_video_channel(lkj_local_file, lkj_id, video_st_tm)
                         # if train_type = 'HXD1', use ab to determine video_channel
-                        video_channel = get_lkj_ab(lkj_local_file, lkj_id)  
+                        video_channel = get_lkj_ab(lkj_local_file, lkj_id)
                         if video_channel == False:
                             main_logger.error('Video channel get error: lkj: {0}, time:{1}'.format(lkj_local_file, video_st_tm))
                             update_video(video_id, video_source)
