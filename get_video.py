@@ -16,7 +16,7 @@ from requests import get    # to make GET request
 import traceback
 import datetime
 os_sep = os.path.sep
-video_path='./video'        # set download path
+video_path='video'        # set download path
 
 def init(log_name):
     ''' Function for initializing main logger and

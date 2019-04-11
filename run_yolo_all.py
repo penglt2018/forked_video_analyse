@@ -28,9 +28,9 @@ video_path='video'       # set download path
 def init(log_name):
     ''' Function for initializing main logger,
         databse connector objects, darknet network, and temp file
-        Input: 
+        Input:
                 log name
-        Return: 
+        Return:
                 return True if all global variables are generated successfully,
                 otherwise return False
     '''
@@ -41,7 +41,8 @@ def init(log_name):
     main_logger = common.get_logger(log_name)
 
 
-    # initialize openpose
+    # initialize darknet
+
     yolo_handler.init()
 
     # connect to Oracle database
