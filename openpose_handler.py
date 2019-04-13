@@ -153,7 +153,7 @@ def exe_openpose(frame_mat, openpose_result, video_info, fps, video_width, video
     train_type = str(video_info[4])
     train_num = str(video_info[5])
     channel = str(video_info[6])
-    camera_loc = video_info[0].split('/')[2]    # camera location: right / right_back / back
+    camera_loc = video_info[0].split('/')[1]    # camera location: right / right_back / back
     #print(box_info)
     #print(train_type, train_num, channel)
     main_drive_box_data = [x[-4:] for x in box_info if x[0] == train_type and \
