@@ -25,7 +25,7 @@ def init():
     # get darkent parameters
     global dn, net, meta
     dn_path, mdl_cfg, weights, meta_f = common.get_yolo_config()
-    
+
     cellphone_weights = './yolov3_32025000.weights'
     cellphone_cfg = './lyc_cellphone.cfg'
     cellphone_meta = './lyc_cellphone_coco.data'
@@ -49,7 +49,7 @@ def init():
     yolo_logger.info('Darknet meta load successfully')
     net = dn.load_net(mdl_cfg.encode('utf-8'), weights.encode('utf-8'), 0)
     yolo_logger.info('Darknet network load successfully')
-    
+
     #global cell_net, cell_meta
     #import darknet as cell_dn
     #cell_dn.set_gpu(0)
@@ -67,7 +67,7 @@ def init_cellphone():
     # get darkent parameters
     global dn, net, meta
     dn_path, mdl_cfg, weights, meta_f = common.get_yolo_config()
-    
+
     cellphone_weights = './yolov3_32095000.weights'
     #cellphone_weights = './yolov3_32025000.weights'
     cellphone_cfg = './lyc_cellphone.cfg'
@@ -93,7 +93,7 @@ def init_cellphone():
     yolo_logger.info('Darknet meta load successfully')
     net = dn.load_net(cellphone_cfg.encode('utf-8'), cellphone_weights.encode('utf-8'), 0)
     yolo_logger.info('Darknet network load successfully')
-    
+
     #global cell_net, cell_meta
     #import darknet as cell_dn
     #cell_dn.set_gpu(0)
@@ -103,9 +103,9 @@ def init_cellphone():
 def exe_yolo_cellphone(frame_mat, yolo_result, video_info, fps):
     ''' Function for executing yolo detect function and
         append the predict result into a list frame by frame
-        Input: 
+        Input:
                 frame_mat: [ [pixel_mat], frame_index ]
-                yolo_result: array to store yolo result 
+                yolo_result: array to store yolo result
                 video_info: information related to the video
                 fps: video fps
         return:
@@ -147,9 +147,9 @@ def exe_yolo_cellphone(frame_mat, yolo_result, video_info, fps):
 def exe_yolo(frame_mat, yolo_result, video_info, fps):
     ''' Function for executing yolo detect function and
         append the predict result into a list frame by frame
-        Input: 
+        Input:
                 frame_mat: [ [pixel_mat], frame_index ]
-                yolo_result: array to store yolo result 
+                yolo_result: array to store yolo result
                 video_info: information related to the video
                 fps: video fps
         return:
@@ -193,7 +193,7 @@ def match_lkj(lkj_file, video_info, yolo_result):
         Input:
                 lkj_file:       LKJ file with path
                 video_info:     video related inforation stored in mysql
-                yolo_result:    return list by yolo 
+                yolo_result:    return list by yolo
         return:
                 match_flg:  flag for checking
                 final_result: combining list from each result list
@@ -223,7 +223,7 @@ def match_lkj(lkj_file, video_info, yolo_result):
         cellphone = [x for x in yolo_result if x[-1] == 'cellphone' ]
         #cellphone = yolo_result
         yolo_logger.info('Cellphone list build successfully')
-        stand_2 = [x for x in yolo_result if x[-1] == 'stand_2' ]
+        stand_2 = [x for x in yolo_result if x[-1] == 'stand_2' or x[-1] == 'stand_1' or x[-1] == 'leave_2' ]
         yolo_logger.info('Stand_2 list build successfully')
 
         leave_1 = [x for x in yolo_result if x[-1] == 'leave_1' ]
@@ -253,8 +253,8 @@ def match_lkj(lkj_file, video_info, yolo_result):
             except Exception:
                 yolo_logger.error('LKJ data and no_break result join failed', exc_info=True)
                 match_flg = 2
-            if no_break_final != []:
-                no_break_final = common.channel_filt(no_break_final, lkj_df, video_name)
+            #if no_break_final != []:
+            #    no_break_final = common.channel_filt(no_break_final, lkj_df, video_name)
 
         # # sleep check
         # if sleep != [] and sleep != [[]]:
@@ -263,7 +263,7 @@ def match_lkj(lkj_file, video_info, yolo_result):
         #         yolo_logger.info('LKJ data and sleep result join successfully')
         #     except Exception:
         #         yolo_logger.error('LKJ data and sleep result join failed'.exc_info=True)
-        #         match_flg = 3 
+        #         match_flg = 3
 
         # cellphone check
         if cellphone != [] and cellphone != [[]]:
@@ -272,7 +272,7 @@ def match_lkj(lkj_file, video_info, yolo_result):
                 yolo_logger.info('LKJ data and cellphone result join successfully')
             except Exception as e:
                 yolo_logger.error('LKJ data and cellphone result join failed', exc_info=True)
-                match_flg = 4 
+                match_flg = 4
 
         # stand_2 check
         if stand_2 != [] and stand_2 != [[]]:
@@ -290,9 +290,9 @@ def match_lkj(lkj_file, video_info, yolo_result):
             except Exception:
                 yolo_logger.error('LKJ data and leave result join failed', exc_info=True)
                 match_flg = 6
-            if leave_1_final != []:
-                #print(leave_final)
-                leave_1_final = common.channel_filt(leave_1_final, lkj_df, video_name)
+            #if leave_1_final != []:
+            #    #print(leave_final)
+            #    leave_1_final = common.channel_filt(leave_1_final, lkj_df, video_name)
 
         if leave_2 != [] and leave_2 != [[]]:
             try:
@@ -313,9 +313,9 @@ def match_lkj(lkj_file, video_info, yolo_result):
 
     final_result = ([no_break_final] + [sleep_final] + [cellphone_final] + [stand_2_final] + [leave_1_final] + [single_person_final])
     return match_flg, final_result
-        
+
 def store_result(final_result, video_info, mysql_db, video_obj):
-    ''' Function for storing violation result into mysql database 
+    ''' Function for storing violation result into mysql database
         and save violate frames to a given path
         Input:
                 final_result: violate result list
@@ -326,7 +326,7 @@ def store_result(final_result, video_info, mysql_db, video_obj):
                 True / False flag
     '''
     global yolo_logger
-    # resolve 
+    # resolve
     no_break_final, sleep_final, cellphone_final, stand_2_final, leave_1_final,single_person_final = final_result
     video_name = video_info[3]
     store_flag = True
@@ -340,7 +340,7 @@ def store_result(final_result, video_info, mysql_db, video_obj):
         return store_flag
     else:
         store_path_prefix=os_sep+'home'+os_sep+'guest'+os_sep+'store'+os_sep+now_time+os_sep
-    
+
     if no_break_final == []:
         yolo_logger.info('No_break NOT detected to video {0}'.format(video_name))
     else:
@@ -349,7 +349,7 @@ def store_result(final_result, video_info, mysql_db, video_obj):
             store_flag = False
         else:
             yolo_logger.info('no_break result insert to db successfully')
-    
+
     # # add sleep result to db
     # if sleep_final == []:
     #     yolo_logger.info('Sleep NOT detected to video {0}'.format(video_name))
@@ -359,7 +359,7 @@ def store_result(final_result, video_info, mysql_db, video_obj):
     #         store_flag = False
     #     else:
     #         yolo_logger.info('Sleep result insert to db successfully')
-    
+
     # add cellphone result to db
     if cellphone_final == []:
         yolo_logger.info('Cellphone NOT detected to video {0}'.format(video_name))
@@ -372,7 +372,7 @@ def store_result(final_result, video_info, mysql_db, video_obj):
             store_flag = False
         else:
             yolo_logger.info('Cellphone result insert to db successfully')
-    
+
     # add stand_2 result to db
     if stand_2_final == []:
         yolo_logger.info('Stand_2 violation NOT detected to video {0}'.format(video_name))

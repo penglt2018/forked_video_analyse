@@ -78,11 +78,11 @@ def init():
         openpose_logger.info('Box config data read successfully')
     except Exception:
         openpose_logger.error('Box config data read failed', exc_info=True)
-    
+
     openpose_logger.info('checking box config data')
     if box_info == None: common.raise_error('Error: box_info is empty', 42)
 
-    
+
 
 def normlization(np_arr, width, height):
     ''' Function for normlizate pose keypoints to range 0 - 1
@@ -120,7 +120,7 @@ def data_trans(pos_keypoints_arr):
                           [x[0],x[1],x[5],x[6],x[7],x[12],x[13]],\
                           [x[0],x[1],x[8],x[12],x[13],x[14],x[19]],\
                           [x[10],x[9],x[4],x[3],x[2],x[1],x[0]]],\
-                          
+
                           [[y[13],y[12],y[7],y[6],y[5],y[1],y[0]],\
                           [y[0],y[1],y[8],y[9],y[10],y[11],y[22]],\
                           [y[0],y[1],y[2],y[3],y[4],y[9],y[10]],\
@@ -135,9 +135,9 @@ def data_trans(pos_keypoints_arr):
 def exe_openpose(frame_mat, openpose_result, video_info, fps, video_width, video_height):
     ''' Function for executing openpose detect function and
         append the predict result into a list frame by frame
-        Input: 
+        Input:
                 frame_mat: [ [pixel_mat], frame_index ]
-                openpose: array to store openpose result 
+                openpose: array to store openpose result
                 video_info: information related to the video
                 fps: video fps
                 video_width: frame width
@@ -153,7 +153,7 @@ def exe_openpose(frame_mat, openpose_result, video_info, fps, video_width, video
     train_type = str(video_info[4])
     train_num = str(video_info[5])
     channel = str(video_info[6])
-    camera_loc = video_info[0].split('/')[2]    # camera location: right / right_back / back
+    camera_loc = video_info[0].split('/')[1]    # camera location: right / right_back / back
     #print(box_info)
     #print(train_type, train_num, channel)
     main_drive_box_data = [x[-4:] for x in box_info if x[0] == train_type and \
@@ -196,7 +196,7 @@ def exe_openpose(frame_mat, openpose_result, video_info, fps, video_width, video
                     common.append_result(openpose_result, frame_idx, fps, video_st_time, '主司机离岗')
                 else:
                     # execute wrong head model
-                    wrong_head_rt = 0    
+                    wrong_head_rt = 0
                     wrong_head_model = 'wrong_head_' + camera_loc
                     try:
                         wrong_head_rt = eval(wrong_head_model)(main_driver_pos)
@@ -239,7 +239,7 @@ def exe_openpose(frame_mat, openpose_result, video_info, fps, video_width, video
                         else:
                             openpose_logger.error('Arm detect model return code out of range: {0}'.format(main_driver_pos))
                             rt_flag = False
-            
+
             # execute sleep detect model with tensorflow
             if pos_keypoint_arr != []:
                 try:
@@ -259,7 +259,7 @@ def exe_openpose(frame_mat, openpose_result, video_info, fps, video_width, video
                 except Exception:
                     openpose_logger.error('Sleep detect model failed with {0}'.format(pos_keypoint_arr), exc_info=True)
                     rt_flag = False
-                
+
 
         if not 'wrong_head_rt' in locals().keys():
             openpose_logger.warning('Wrong head model does not execute to video {0}'.format(video_name))
@@ -279,7 +279,7 @@ def match_lkj(lkj_file, video_info, op_result):
         Input:
                 lkj_file:       LKJ file with path
                 video_info:     video related inforation stored in mysql
-                op_result:      return list by openpose 
+                op_result:      return list by openpose
         return:
                 match_flg:  flag for checking
                 final_result: combining list from each result list
@@ -333,7 +333,7 @@ def match_lkj(lkj_file, video_info, op_result):
         fist_other_final = []
         sleep_final = []
         nap_final = []
-        
+
         # # leave filt
         # if leave_result != []:
         #     #print(leave_result)
@@ -356,9 +356,9 @@ def match_lkj(lkj_file, video_info, op_result):
             except Exception:
                 openpose_logger.error('LKJ data and worng head result join failed', exc_info=True)
                 match_flg = 3
-            if wrong_head_final != []:
-                #print(wrong_head_final)
-                wrong_head_final = common.channel_filt(wrong_head_final, lkj_df, video_name)
+            #if wrong_head_final != []:
+            #    #print(wrong_head_final)
+            #    wrong_head_final = common.channel_filt(wrong_head_final, lkj_df, video_name)
 
         # execute single person rules
         # if num_people_result != []:
@@ -380,7 +380,7 @@ def match_lkj(lkj_file, video_info, op_result):
         # execute sleep rules
         if sleep_result != []:
             try:
-                sleep_final = LKJLIB.time_filter(sleep_result, lkj_df, speed_thresh=0, time_range=60)
+                sleep_final = LKJLIB.time_filter(sleep_result, lkj_df, speed_thresh=0, time_range=120)
                 openpose_logger.info('LKJ data and sleep result join successfully')
                 #print(sleep_final)
             except Exception:
@@ -390,15 +390,15 @@ def match_lkj(lkj_file, video_info, op_result):
         # execute nap rules
         if nap_result != []:
             try:
-                nap_final = LKJLIB.time_filter(nap_result, lkj_df, speed_thresh=0, time_range=60)
+                nap_final = LKJLIB.time_filter(nap_result, lkj_df, speed_thresh=0, time_range=180)
                 openpose_logger.info('LKJ data and nap result join successfully')
                 #print(nap_final)
             except Exception:
                 openpose_logger.error('LKJ data and nap result join failed', exc_info=True)
                 match=9
 
-            if nap_final != []:
-                nap_final = common.channel_filt(nap_final, lkj_df, video_name)
+            #if nap_final != []:
+            #    nap_final = common.channel_filt(nap_final, lkj_df, video_name)
 
         # execute point forward rules
         point_forward_comb = point_forward_result + other_gesture_result + fist_result
@@ -408,7 +408,7 @@ def match_lkj(lkj_file, video_info, op_result):
                                                             df_lkj_input=lkj_df,\
                                                             time_range=[video_st_time, video_ed_time],\
                                                             motion=[],\
-                                                            event_list=['出站', '进站'],\
+                                                            event_list=['出站', '进站', '过分相'],\
                                                             lkj_condi=['绿灯', '绿黄灯','双黄灯','黄闪黄','黄灯'],\
                                                             speed_thresh=1,\
                                                             distance_thresh=800)
@@ -420,7 +420,7 @@ def match_lkj(lkj_file, video_info, op_result):
                                                                                 df_lkj_input=lkj_df,\
                                                                                 time_range=[video_st_time, video_ed_time],\
                                                                                 motion=[],\
-                                                                                event_list=['出站', '进站'],\
+                                                                                event_list=['出站', '进站', '过分相'],\
                                                                                 lkj_condi=['绿灯', '绿黄灯','双黄灯','黄闪黄','黄灯'],\
                                                                                 speed_thresh=1,\
                                                                                 distance_thresh=800)
@@ -432,12 +432,12 @@ def match_lkj(lkj_file, video_info, op_result):
                         lkj_signal_filt = LKJLIB.model_time_exclude(lkj_df, pd.DataFrame(point_forward_include_final,columns=['时间', '信号', '事件', '距离']),0)
                     else:
                         lkj_signal_filt = lkj_df
-                    
+
                     point_forward_other_final = LKJLIB.arm_detect_include_filter(model_data=other_gesture_result, \
                                                                                 df_lkj_input=lkj_signal_filt, \
                                                                                 time_range=[video_st_time, video_ed_time],\
                                                                                 motion=[],\
-                                                                                event_list=['出站', '进站'],\
+                                                                                event_list=['出站', '进站','过分相'],\
                                                                                 lkj_condi=['绿灯', '绿黄灯','双黄灯','黄闪黄','黄灯'],\
                                                                                 speed_thresh=1,\
                                                                                 distance_thresh=800)
@@ -467,7 +467,7 @@ def match_lkj(lkj_file, video_info, op_result):
                                                                         lkj_condi=['红灯'],
                                                                         speed_thresh=1,\
                                                                         distance_thresh=800)
-                    
+
                     #fist_include_final = common.channel_filt(fist_include_final, lkj_df, video_name)
                 if other_gesture_result != []:
                     if fist_include_final != [] and fist_include_final != [[]]:
@@ -524,7 +524,7 @@ def match_lkj(lkj_file, video_info, op_result):
 #     return rt
 
 def store_result(final_result, video_info, mysql_db, video_obj, final_include_result=None):
-    ''' Function for storing violation result into mysql database 
+    ''' Function for storing violation result into mysql database
         and save violate frames to a given path
         Input:
                 final_result: violate result list
@@ -566,14 +566,14 @@ def store_result(final_result, video_info, mysql_db, video_obj, final_include_re
         openpose_logger.info('Wrong head NOT detected to video {0}'.format(video_name))
     else:
         wronghead_move = [i for i in wrong_head_final if i[2] > 0 ]
-        wronghead_stop = [i for i in wrong_head_final if i[2] == 0]
-        if common.add_to_db(mysql_db, video_info, wronghead_move, 'violate_result.report', '主司机偏头(运行)', video_obj, store_path_prefix+'wronghead') == False or \
-            common.add_to_db(mysql_db, video_info, wronghead_stop, 'violate_result.report', '主司机偏头(停车)', video_obj, store_path_prefix+'wronghead') == False:
+        #wronghead_stop = [i for i in wrong_head_final if i[2] == 0]
+        if common.add_to_db(mysql_db, video_info, wronghead_move, 'violate_result.report', '主司机偏头(运行)', video_obj, store_path_prefix+'wronghead') == False : #or \
+            #common.add_to_db(mysql_db, video_info, wronghead_stop, 'violate_result.report', '主司机偏头(停车)', video_obj, store_path_prefix+'wronghead') == False:
             openpose_logger.error('WrongHead result insert to db failed to video {0}'.format(video_name))
             store_flag = False
         else:
             openpose_logger.info('WrongHead result insert to db successfully')
-    
+
     # add double person result to db
     if single_person_final == []:
         openpose_logger.info('Single person NOT detected to video {0}'.format(video_name))
@@ -646,7 +646,7 @@ def store_result(final_result, video_info, mysql_db, video_obj, final_include_re
 
     other_final = point_forward_other_final + fist_other_final
     if other_final != []:
-        common.add_to_db(mysql_db, video_info, other_final, 'violate_result.report', '主司机不标准手比', video_obj)
+        common.add_to_db(mysql_db, video_info, other_final, 'violate_result.report', '主司机手比', video_obj)
 
     return store_flag
 
@@ -659,7 +659,7 @@ def store_result(final_result, video_info, mysql_db, video_obj, final_include_re
 #     video_pth = cfg.get('path', 'video_path')
 #     common.path_check(video_pth, openpose_logger, 'Video path NOT set!', 8)
 #     openpose_logger.info('function main: video_path {0} get successfully'.format(video_pth))
-    
+
 #     # Connect to DB
 #     openpose_logger.info('function main: connecting to Mysql database')
 #     mysql_db = common.connect_db(cfg, mysql_logger, 'mysql')
@@ -676,10 +676,10 @@ def store_result(final_result, video_info, mysql_db, video_obj, final_include_re
 #         else:
 #             openpose_logger.info('function main: Oracle database connect successfully')
 #             openpose_logger.info('function main: prepare to execute model')
-            
+
 #             save_tmp=open('tmp/pict.sav', 'a+')
 #             openpose_logger.info('function main: temp file {0} generate successfully'.format(save_tmp))
-            
+
 #             # trace json folder
 #             openpose_logger.info('function main: walk through dirs under json path {0}'.format(json_path))
 #             for root,dirs,files in os.walk(json_path):
@@ -717,7 +717,7 @@ def store_result(final_result, video_info, mysql_db, video_obj, final_include_re
 #                             openpose_logger.error('function main: custom model program error: return out of range under path {0}'.format(root))
 #                         else:
 #                             openpose_logger.info('function main: custom model execute successfully under path {0}'.format(root))
-                            
+
 #                             # execute judge rules
 #                             openpose_logger.info('function main: matching lkj data and custom model result under path {0}'.format(root))
 #                             #match_rt, leave_final, wrong_head_final, single_person_final, channel_shift_final = match_lkj(qry_result,leave_result,wrong_head_result, num_people_result)
@@ -733,7 +733,7 @@ def store_result(final_result, video_info, mysql_db, video_obj, final_include_re
 #                             openpose_logger.error('function main: video table {0} update failed under path {1}'.format(video_name, root))
 #                         else:
 #                             openpose_logger.info('function main: video table {0} update successfully under path {1}'.format(video_name, root))
-                        
+
 #                     # video num + 1
 #                     dir_ct += 1
 
@@ -763,7 +763,7 @@ def store_result(final_result, video_info, mysql_db, video_obj, final_include_re
 #         oracle_logger.info('function main: database close successfully')
 #     except Exception as e:
 #         oracle_logger.error('function main: database close failed {0}'.format(traceback.format_exc()))
-        
 
 
-                    
+
+

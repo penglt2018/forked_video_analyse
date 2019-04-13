@@ -23,14 +23,14 @@ import lib.video_handler as video_handler
 import yolo_handler
 import time
 os_sep = os.path.sep
-video_path='./video'       # set download path
+video_path='video'       # set download path
 
 def init(log_name):
     ''' Function for initializing main logger,
         databse connector objects, darknet network, and temp file
-        Input: 
+        Input:
                 log name
-        Return: 
+        Return:
                 return True if all global variables are generated successfully,
                 otherwise return False
     '''
@@ -38,9 +38,9 @@ def init(log_name):
     main_logger = False
     mysql_db = False
     main_logger = common.get_logger(log_name)
-    
+
     # initialize darknet
-     
+
     yolo_handler.init()
 
     # connect to Mysql database
@@ -50,7 +50,7 @@ def init(log_name):
         main_logger.error(mysql_conn_rt[1])
     else:
         main_logger.info(mysql_conn_rt[1])
-        mysql_db = mysql_conn_rt[2] 
+        mysql_db = mysql_conn_rt[2]
 
     # create a temp file to record image filenames
     # which needs to be saved
@@ -66,7 +66,7 @@ def init(log_name):
         if mysql_db != False:
             common.close_db(mysql_db, 'mysql')
         return False
-    
+
 def run_yolo(video_obj, video_info, lkj_file):
     ''' Function for executing yolo
         Input:
@@ -103,7 +103,7 @@ def run_yolo(video_obj, video_info, lkj_file):
                 if store_rt_flag == False:
                     main_logger.error('Violation result of video {0} stored contains some errors, please refer to yolo log for further details'.format(video_name))
                 else:
-                    main_logger.info('Violation result of video {0} stored successfully'.format(video_name))       
+                    main_logger.info('Violation result of video {0} stored successfully'.format(video_name))
 
 
 def start():
@@ -127,7 +127,7 @@ def start():
                 else:
                     video_info = video_info_rt[2]
                     main_logger.info(video_info_rt[1])
-                    
+
                     # fetch related lkj file
                     lkj_file = video_info[0]
                     video_name = video_info[3]
@@ -152,11 +152,11 @@ def start():
 
                         # parallel computing
                         if video_ini_flag == True:
-                            run_yolo(video_obj, video_info, lkj_file)  
+                            run_yolo(video_obj, video_info, lkj_file)
 
-                    print("Yolo execute time: " + str(time.time() - s_time))                          
+                    print("Yolo execute time: " + str(time.time() - s_time))
 
 if __name__ == '__main__':
     init('run_model')
     start()
-    common.close_db(mysql_db, 'mysql')                                    
+    common.close_db(mysql_db, 'mysql')

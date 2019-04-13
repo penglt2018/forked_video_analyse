@@ -134,9 +134,9 @@ echo 'clean.sh execute begin'
 [ $? -ne 0 ] && echo 'Error: clean.sh execute failed!' || echo 'clean.sh finish successfully'
 
 echo 'Program finish'
-
+sleep 10
 python3 ./get_video_all.py
 
-python3 ./run_yolo.py
+python3 ./run_yolo_all.py
 ./clean.sh
 
