@@ -285,7 +285,7 @@ def match_lkj(lkj_file, video_info, yolo_result):
 
         if leave_1 != [] and leave_1 != [[]]:
             try:
-                leave_1_final = LKJLIB.time_filter(leave_1, lkj_df, speed_thresh=0, time_range=10)
+                leave_1_final = LKJLIB.time_filter(leave_1, lkj_df, speed_thresh=1, time_range=5)
                 yolo_logger.info('LKJ data and leave result join successfully')
             except Exception:
                 yolo_logger.error('LKJ data and leave result join failed', exc_info=True)
