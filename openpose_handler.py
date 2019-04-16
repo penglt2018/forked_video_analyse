@@ -249,13 +249,14 @@ def exe_openpose(frame_mat, openpose_result, video_info, fps, video_width, video
                     #print(cus_pos_keypoints_list)
                     # since all people should NOT sleep, all people's pos
                     # keypoints are used for detecting
-                    for cus_pos in cus_pos_keypoints_list:
-                        tf_model_result = sess.run(y_conv, feed_dict={x_conv: np.array([cus_pos], dtype=np.float32), keep_prob:1.0}).tolist()[0]
-                        prob = max(tf_model_result)
-                        max_index = tf_model_result.index(prob)
-                        # label 1 = sleep, 0 = normal & sit, 2 = stand
-                        if max_index == 1 and prob > 0.8:
-                            common.append_result(openpose_result, frame_idx, fps, video_st_time, '平躺睡觉')
+                    if len(cus_pos_keypoints_list) <= 2:
+                        for cus_pos in cus_pos_keypoints_list:
+                            tf_model_result = sess.run(y_conv, feed_dict={x_conv: np.array([cus_pos], dtype=np.float32), keep_prob:1.0}).tolist()[0]
+                            prob = max(tf_model_result)
+                            max_index = tf_model_result.index(prob)
+                            # label 1 = sleep, 0 = normal & sit, 2 = stand
+                            if max_index == 1 and prob > 0.8:
+                                common.append_result(openpose_result, frame_idx, fps, video_st_time, '平躺睡觉')
                 except Exception:
                     openpose_logger.error('Sleep detect model failed with {0}'.format(pos_keypoint_arr), exc_info=True)
                     rt_flag = False
@@ -334,24 +335,24 @@ def match_lkj(lkj_file, video_info, op_result):
         sleep_final = []
         nap_final = []
 
-        # # leave filt
-        # if leave_result != []:
-        #     #print(leave_result)
-        #     try:
-        #         leave_final = LKJLIB.time_filter(leave_result, lkj_df, speed_thresh=0, time_range=10)
-        #         openpose_logger.info('LKJ data and leave result join successfully')
-        #     except Exception:
-        #         openpose_logger.error('LKJ data and leave result join failed', exc_info=True)
-        #         match_flg = 2
-        #     if leave_final != []:
-        #         #print(leave_final)
-        #         leave_final = common.channel_filt(leave_final, lkj_df, video_name)
+        # leave filt
+        if leave_result != []:
+            #print(leave_result)
+            try:
+                leave_final = LKJLIB.time_filter(leave_result, lkj_df, speed_thresh=1, time_range=5)
+                openpose_logger.info('LKJ data and leave result join successfully')
+            except Exception:
+                openpose_logger.error('LKJ data and leave result join failed', exc_info=True)
+                match_flg = 2
+            if leave_final != []:
+                #print(leave_final)
+                leave_final = common.channel_filt(leave_final, lkj_df, video_name)
 
         # execute wrong head judge ruls
         if wrong_head_result != []:
             #print(wrong_head_result)
             try:
-                wrong_head_final = LKJLIB.time_filter(wrong_head_result, lkj_df, speed_thresh=0, time_range=5)
+                wrong_head_final = LKJLIB.time_filter(wrong_head_result, lkj_df, speed_thresh=0, time_range=10)
                 openpose_logger.info('LKJ data and wrong head result join successfully')
             except Exception:
                 openpose_logger.error('LKJ data and worng head result join failed', exc_info=True)
