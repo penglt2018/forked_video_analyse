@@ -26,9 +26,12 @@ import pandas as pd
 from model.right.pos_recog_model import wrong_head as wrong_head_right
 from model.back.pos_recog_model import wrong_head as wrong_head_back
 from model.right_back.pos_recog_model import wrong_head as wrong_head_right_back
+from model.right.pos_recog_model import wrong_head as wrong_head_right
 from model.right_back.pos_recog_model import arm_detect as arm_detect_right_back
+from model.right.pos_recog_model import arm_detect as arm_detect_right
 from model.right_back.pos_recog_model import get_angle
 from model.right_back.pos_recog_model import nap_detect as nap_detect_right_back
+from model.right.pos_recog_model import nap_detect as nap_detect_right
 import time
 import lib.lkj_lib as LKJLIB
 import lib.coord_handler as coord_handler
@@ -156,6 +159,7 @@ def exe_openpose(frame_mat, openpose_result, video_info, fps, video_width, video
     camera_loc = video_info[0].split('/')[1]    # camera location: right / right_back / back
     #print(box_info)
     #print(train_type, train_num, channel)
+    #print(channel,train_type,train_num,box_info)
     main_drive_box_data = [x[-4:] for x in box_info if x[0] == train_type and \
                            x[1] == train_num and \
                            x[2] == '1' and \
@@ -302,6 +306,7 @@ def match_lkj(lkj_file, video_info, op_result):
         video_st_time = video_info[1]
         video_ed_time = video_info[2]
         video_name = video_info[3]
+        train_type = str(video_info[4])
         #print(video_st_time, video_ed_time)
 
         openpose_logger.info('Seperating Openpose predict result')
@@ -335,31 +340,31 @@ def match_lkj(lkj_file, video_info, op_result):
         sleep_final = []
         nap_final = []
 
-        # leave filt
-        if leave_result != []:
-            #print(leave_result)
-            try:
-                leave_final = LKJLIB.time_filter(leave_result, lkj_df, speed_thresh=1, time_range=5)
-                openpose_logger.info('LKJ data and leave result join successfully')
-            except Exception:
-                openpose_logger.error('LKJ data and leave result join failed', exc_info=True)
-                match_flg = 2
-            if leave_final != []:
-                #print(leave_final)
-                leave_final = common.channel_filt(leave_final, lkj_df, video_name)
+        # # leave filt
+        # if leave_result != []:
+        #     #print(leave_result)
+        #     try:
+        #         leave_final = LKJLIB.time_filter(leave_result, lkj_df, speed_thresh=0, time_range=10)
+        #         openpose_logger.info('LKJ data and leave result join successfully')
+        #     except Exception:
+        #         openpose_logger.error('LKJ data and leave result join failed', exc_info=True)
+        #         match_flg = 2
+        #     if leave_final != []:
+        #         #print(leave_final)
+        #         leave_final = common.channel_filt(leave_final, lkj_df, video_name)
 
         # execute wrong head judge ruls
         if wrong_head_result != []:
             #print(wrong_head_result)
             try:
-                wrong_head_final = LKJLIB.time_filter(wrong_head_result, lkj_df, speed_thresh=0, time_range=10)
+                wrong_head_final = LKJLIB.time_filter(wrong_head_result, lkj_df, speed_thresh=0, time_range=5)
                 openpose_logger.info('LKJ data and wrong head result join successfully')
             except Exception:
                 openpose_logger.error('LKJ data and worng head result join failed', exc_info=True)
                 match_flg = 3
-            #if wrong_head_final != []:
-            #    #print(wrong_head_final)
-            #    wrong_head_final = common.channel_filt(wrong_head_final, lkj_df, video_name)
+            if train_type != 'HXD1' and train_type != 'HXD2' and wrong_head_final != []:
+                #print(wrong_head_final)
+                wrong_head_final = common.channel_filt(wrong_head_final, lkj_df, video_name)
 
         # execute single person rules
         # if num_people_result != []:
@@ -398,8 +403,8 @@ def match_lkj(lkj_file, video_info, op_result):
                 openpose_logger.error('LKJ data and nap result join failed', exc_info=True)
                 match=9
 
-            #if nap_final != []:
-            #    nap_final = common.channel_filt(nap_final, lkj_df, video_name)
+            if train_type != 'HXD1' and train_type != 'HXD2' and  nap_final != []:
+                nap_final = common.channel_filt(nap_final, lkj_df, video_name)
 
         # execute point forward rules
         point_forward_comb = point_forward_result + other_gesture_result + fist_result
@@ -409,7 +414,7 @@ def match_lkj(lkj_file, video_info, op_result):
                                                             df_lkj_input=lkj_df,\
                                                             time_range=[video_st_time, video_ed_time],\
                                                             motion=[],\
-                                                            event_list=['出站', '进站', '过分相'],\
+                                                            event_list=['出站', '进站'],\
                                                             lkj_condi=['绿灯', '绿黄灯','双黄灯','黄闪黄','黄灯'],\
                                                             speed_thresh=1,\
                                                             distance_thresh=800)
@@ -417,11 +422,11 @@ def match_lkj(lkj_file, video_info, op_result):
                 #print(point_forward_final)
                 #print(point_forward_result)
                 if point_forward_result != []:
-                    point_forward_include_final = LKJLIB.arm_detect_include_filter(model_data=point_forward_result,\
+                    point_forward_include_final = LKJLIB.arm_detect_include_filter(model_data=point_forward_result + fist_result,\
                                                                                 df_lkj_input=lkj_df,\
                                                                                 time_range=[video_st_time, video_ed_time],\
                                                                                 motion=[],\
-                                                                                event_list=['出站', '进站', '过分相'],\
+                                                                                event_list=['出站', '进站'],\
                                                                                 lkj_condi=['绿灯', '绿黄灯','双黄灯','黄闪黄','黄灯'],\
                                                                                 speed_thresh=1,\
                                                                                 distance_thresh=800)
@@ -429,8 +434,8 @@ def match_lkj(lkj_file, video_info, op_result):
                     #point_forward_include_final = common.channel_filt(point_forward_include_final, lkj_df, video_name)
                 #print(other_gesture_result)
                 if other_gesture_result != []:
-                    if point_forward_include_final != [] and point_forward_include_final != [[]]:
-                        lkj_signal_filt = LKJLIB.model_time_exclude(lkj_df, pd.DataFrame(point_forward_include_final,columns=['时间', '信号', '事件', '距离']),0)
+                    if (point_forward_include_final != [] and point_forward_include_final != [[]]) or (point_forward_final != [] and point_forward_final != [[]]):
+                        lkj_signal_filt = LKJLIB.model_time_exclude(lkj_df, pd.DataFrame(point_forward_include_final + point_forward_final,columns=['时间', '信号', '事件', '距离']),0)
                     else:
                         lkj_signal_filt = lkj_df
 
@@ -438,7 +443,7 @@ def match_lkj(lkj_file, video_info, op_result):
                                                                                 df_lkj_input=lkj_signal_filt, \
                                                                                 time_range=[video_st_time, video_ed_time],\
                                                                                 motion=[],\
-                                                                                event_list=['出站', '进站','过分相'],\
+                                                                                event_list=['出站', '进站'],\
                                                                                 lkj_condi=['绿灯', '绿黄灯','双黄灯','黄闪黄','黄灯'],\
                                                                                 speed_thresh=1,\
                                                                                 distance_thresh=800)

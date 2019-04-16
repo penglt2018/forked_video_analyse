@@ -154,7 +154,6 @@ def downloadFile(ftp, remoteRelPath, localDir):
     """
     #print("start download file by use FTP...")
     result = [1, ""]
-
     try:
         fileName = os.path.basename(remoteRelPath)  # 文件名
 
